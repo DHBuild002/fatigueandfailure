@@ -40,7 +40,7 @@ export const EXERCISES: Exercise[] = [
   { id: 'band-tricep-pushdown', day: 3, role: 'B', name: 'Band tricep pushdown', prescription: '3×15, paired with curl', load: 'band', scheme: { sets: 3, reps: 15 } },
 
   { id: 'bench-press', day: 4, role: 'A', name: 'Barbell bench press', prescription: 'Sets to failure', load: 'weight' },
-  { id: 'floor-press', day: 4, role: 'B', name: 'Barbell floor press', prescription: '3×12', load: 'weight', scheme: { sets: 3, reps: 12 } },
+  { id: 'db-overhead-press', day: 4, role: 'B', name: 'Dumbbell overhead press', prescription: '3×12', load: 'weight', scheme: { sets: 3, reps: 12 } },
 
   { id: 'bent-over-row', day: 5, role: 'A', name: 'Barbell bent-over row', prescription: 'Sets to failure', load: 'weight' },
   { id: 'romanian-deadlift', day: 5, role: 'B', name: 'Barbell Romanian deadlift', prescription: '3×12', load: 'weight', scheme: { sets: 3, reps: 12 } },

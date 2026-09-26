@@ -71,14 +71,14 @@ export function ExerciseCard({ exercise, week, state }: Props) {
         <dl className="grid grid-cols-2 gap-2">
           <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
             <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Last best</dt>
-            <dd className="text-base font-semibold tabular-nums">
+            <dd className="text-sm font-medium tabular-nums text-zinc-700">
               <StatValue set={best} unit={state.unit} perLeg={exercise.perLeg} />
             </dd>
             <dd className="text-xs text-zinc-500">Week {prev!.week}</dd>
           </div>
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
             <dt className="text-xs font-medium uppercase tracking-wide text-emerald-800">Target</dt>
-            <dd className="text-base font-semibold tabular-nums text-emerald-900">
+            <dd className="text-sm font-medium tabular-nums text-emerald-800">
               <StatValue set={target} unit={state.unit} perLeg={exercise.perLeg} />
             </dd>
             <dd className="text-xs text-emerald-800">{targetNote(exercise, target, week, state.unit)}</dd>
@@ -175,7 +175,7 @@ function StatValue({ set, unit, perLeg }: { set: Pick<SetLog, 'weightKg' | 'band
   const load = set.band ?? `${formatNumber(toDisplay(set.weightKg ?? 0, unit))} ${unit}`;
   return (
     <>
-      <span className="whitespace-nowrap capitalize">{load}</span>{' '}
+      <span className={`whitespace-nowrap ${set.band ? 'capitalize' : ''}`}>{load}</span>{' '}
       <span className="whitespace-nowrap">
         × {set.reps}
         {perLeg && <span className="text-sm font-normal opacity-70">/leg</span>}

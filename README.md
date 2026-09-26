@@ -34,7 +34,11 @@ To try it on a phone on the same network, run `npm run dev -- --host` and open t
 
 ## Deploying
 
-`dist/` is a static site with a relative base path, so it works on Vercel, Netlify or GitHub Pages (including a `/repo-name/` sub-path) without configuration changes.
+`.github/workflows/ci-deploy.yml` runs lint, tests and a build on every pull request. On every push to `main`, it also deploys `dist/` to GitHub Pages at `https://<owner>.github.io/fatigueandfailure/`.
+
+One-time setup: **Settings → Pages → Build and deployment → Source: GitHub Actions**. Until that's set, the deploy job fails and the build job still runs.
+
+The build uses a relative base path, so `dist/` also works as-is on Vercel or Netlify (build command `npm run build`, output directory `dist`).
 
 ## Project structure
 

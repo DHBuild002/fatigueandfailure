@@ -67,10 +67,10 @@ export function Home({ state, week, current, onWeek, onDay, onCardio, onSettings
               >
                 <span className="flex items-center gap-3">
                   <span
-                    className={`h-12 w-12 shrink-0 rounded-xl grid place-content-center text-center leading-none ${done ? 'bg-emerald-700 text-white' : 'bg-zinc-900 text-white'}`}
+                    className={`h-11 w-11 shrink-0 rounded-xl grid place-content-center text-center leading-none ${done ? 'bg-emerald-50 text-emerald-700' : 'bg-zinc-100 text-zinc-500'}`}
                   >
-                    <span className="block text-[10px] font-semibold tracking-widest">DAY</span>
-                    <span className="block text-xl font-bold tabular-nums">{day}</span>
+                    <span className="block text-[9px] font-medium tracking-widest">DAY</span>
+                    <span className="block text-base font-medium tabular-nums">{day}</span>
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="block text-lg font-semibold">

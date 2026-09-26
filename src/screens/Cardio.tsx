@@ -9,7 +9,7 @@ interface Props {
 }
 
 const field = 'h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-emerald-600';
-const numField = `${field} text-2xl text-center`;
+const numField = `${field} text-xl text-center`;
 
 export function Cardio({ state, week, onBack }: Props) {
   const existing = state.cardio[week];
@@ -56,14 +56,7 @@ export function Cardio({ state, week, onBack }: Props) {
       >
         <label className="block space-y-2">
           <span className="text-sm text-zinc-600">Type</span>
-          <input className={field} value={type} onChange={(e) => setType(e.target.value)} list="cardio-types" autoCapitalize="sentences" />
-          <datalist id="cardio-types">
-            <option value="Run" />
-            <option value="Walk" />
-            <option value="Cycle" />
-            <option value="Row" />
-            <option value="Swim" />
-          </datalist>
+          <input className={field} value={type} onChange={(e) => setType(e.target.value)} autoCapitalize="sentences" />
         </label>
         <label className="block space-y-2">
           <span className="text-sm text-zinc-600">Duration (minutes)</span>

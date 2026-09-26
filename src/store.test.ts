@@ -131,16 +131,16 @@ describe('nextTarget', () => {
     expect(t).toMatchObject({ weightKg: 62.5, reps: 7, progressed: false });
   });
   it('B: adds 2.5 kg once every prescribed set hits its reps', () => {
-    const t = nextTarget(ex('floor-press'), prev(1, [w(50, 12), w(50, 12), w(50, 12)]), 2, 'kg');
+    const t = nextTarget(ex('db-overhead-press'), prev(1, [w(50, 12), w(50, 12), w(50, 12)]), 2, 'kg');
     expect(t).toMatchObject({ reps: 12, progressed: true });
     expect(t!.weightKg).toBeCloseTo(52.5);
   });
   it('B: repeats the weight when a set fell short', () => {
-    const t = nextTarget(ex('floor-press'), prev(1, [w(50, 12), w(50, 12), w(50, 10)]), 2, 'kg');
+    const t = nextTarget(ex('db-overhead-press'), prev(1, [w(50, 12), w(50, 12), w(50, 10)]), 2, 'kg');
     expect(t).toMatchObject({ weightKg: 50, reps: 12, progressed: false });
   });
   it('B: steps 5 lb in lb mode', () => {
-    const t = nextTarget(ex('floor-press'), prev(1, [w(fromDisplay(135, 'lb'), 12), w(fromDisplay(135, 'lb'), 12), w(fromDisplay(135, 'lb'), 12)]), 2, 'lb');
+    const t = nextTarget(ex('db-overhead-press'), prev(1, [w(fromDisplay(135, 'lb'), 12), w(fromDisplay(135, 'lb'), 12), w(fromDisplay(135, 'lb'), 12)]), 2, 'lb');
     expect(toDisplay(t!.weightKg!, 'lb')).toBe(140);
   });
   it('B band: moves to the next band, and adds reps once on heavy', () => {
@@ -149,7 +149,7 @@ describe('nextTarget', () => {
     expect(nextTarget(ex('band-curl'), prev(1, [b('heavy', 15), b('heavy', 16), b('heavy', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reps: 17 });
   });
   it('holds the load on deload weeks', () => {
-    const t = nextTarget(ex('floor-press'), prev(3, [w(50, 12), w(50, 12), w(50, 12)]), 4, 'kg');
+    const t = nextTarget(ex('db-overhead-press'), prev(3, [w(50, 12), w(50, 12), w(50, 12)]), 4, 'kg');
     expect(t).toMatchObject({ weightKg: 50, reps: 12, progressed: false });
   });
 });

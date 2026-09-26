@@ -49,7 +49,7 @@ export function Stepper({ value, step, label, onChange }: Props) {
           onChange(n === undefined ? undefined : Math.max(0, n));
         }}
         onFocus={(e) => e.target.select()}
-        className="h-12 w-full min-w-0 flex-1 rounded-xl bg-white border border-zinc-300 text-2xl text-center focus:outline-none focus:border-emerald-600"
+        className="h-12 w-full min-w-0 flex-1 rounded-xl bg-white border border-zinc-300 text-xl text-center focus:outline-none focus:border-emerald-600"
       />
       <button type="button" onClick={() => bump(1)} aria-label={`Increase ${label}`} className="h-12 min-w-12 rounded-xl bg-zinc-100 text-2xl active:bg-zinc-300">
         +
