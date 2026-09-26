@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { exercisesFor, isDeload, EXERCISES } from './routine';
+import { exercisesFor, isDeload, EXERCISES, type Exercise } from './routine';
 import {
   beats,
   nextTarget,
@@ -122,6 +122,7 @@ describe('selectors and formatting', () => {
 describe('nextTarget', () => {
   const ex = (id: string) => EXERCISES.find((e) => e.id === id)!;
   const prev = (week: number, sets: SetLog[]) => ({ week, sets });
+  const bandEx: Exercise = { id: 'band', day: 3, role: 'B', name: 'Band curl', prescription: '3×15', load: 'band', scheme: { sets: 3, reps: 15 } };
 
   it('is null with no history', () => {
     expect(nextTarget(ex('bench-press'), null, 1, 'kg')).toBeNull();
@@ -145,8 +146,8 @@ describe('nextTarget', () => {
   });
   it('B band: moves to the next band, and adds reps once on heavy', () => {
     const b = (band: 'medium' | 'heavy', reps: number): SetLog => ({ band, reps, at });
-    expect(nextTarget(ex('band-curl'), prev(1, [b('medium', 15), b('medium', 15), b('medium', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reps: 15 });
-    expect(nextTarget(ex('band-curl'), prev(1, [b('heavy', 15), b('heavy', 16), b('heavy', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reps: 17 });
+    expect(nextTarget(bandEx, prev(1, [b('medium', 15), b('medium', 15), b('medium', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reps: 15 });
+    expect(nextTarget(bandEx, prev(1, [b('heavy', 15), b('heavy', 16), b('heavy', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reps: 17 });
   });
   it('holds the load on deload weeks', () => {
     const t = nextTarget(ex('db-overhead-press'), prev(3, [w(50, 12), w(50, 12), w(50, 12)]), 4, 'kg');

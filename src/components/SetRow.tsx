@@ -81,13 +81,13 @@ export function SetEditor({ index, exercise, unit, initial, repsRef, onSave, onD
             inputMode="numeric"
             pattern="[0-9]*"
             enterKeyHint="done"
-            aria-label={exercise.perLeg ? 'Reps per leg' : 'Reps'}
+            aria-label={exercise.perSide ? `Reps per ${exercise.perSide}` : 'Reps'}
             placeholder="reps"
             value={reps}
             onChange={(e) => setReps(e.target.value.replace(/\D/g, ''))}
             className="h-12 w-full min-w-0 rounded-xl bg-white border border-zinc-300 text-xl text-center placeholder:text-zinc-400 focus:outline-none focus:border-emerald-600"
           />
-          <span className="text-sm text-zinc-600 shrink-0">{exercise.perLeg ? 'reps/leg' : 'reps'}</span>
+          <span className="text-sm text-zinc-600 shrink-0">{exercise.perSide ? `reps/${exercise.perSide}` : 'reps'}</span>
         </label>
         <button type="button" onClick={onDiscard} aria-label={discardLabel} className="h-12 min-w-12 grid place-items-center rounded-xl bg-zinc-100 text-zinc-700 active:bg-zinc-300">
           <Close />
@@ -105,11 +105,11 @@ interface ViewProps {
   set: SetLog;
   prev?: SetLog;
   unit: Unit;
-  perLeg?: boolean;
+  perSide?: 'leg' | 'arm';
   onEdit: () => void;
 }
 
-export function SetRow({ index, set, prev, unit, perLeg, onEdit }: ViewProps) {
+export function SetRow({ index, set, prev, unit, perSide, onEdit }: ViewProps) {
   const up = beats(set, prev, unit);
   const load = set.band ? <span className="capitalize">{set.band}</span> : `${formatNumber(toDisplay(set.weightKg ?? 0, unit))} ${unit}`;
   return (
@@ -121,7 +121,7 @@ export function SetRow({ index, set, prev, unit, perLeg, onEdit }: ViewProps) {
       <span className="text-xs text-zinc-500 w-10">Set {index + 1}</span>
       <span className="flex-1 text-base tabular-nums text-zinc-800">
         {load} × {set.reps}
-        {perLeg && <span className="text-sm text-zinc-600">/leg</span>}
+        {perSide && <span className="text-sm text-zinc-600">/{perSide}</span>}
       </span>
       {up && (
         <span className="flex items-center gap-1 text-emerald-700 text-sm font-medium">
