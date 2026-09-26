@@ -1,11 +1,11 @@
 // Generates the PWA icons in public/ with no image dependencies:
-// three ascending emerald bars on the zinc-950 background.
+// three ascending red bars on a white background.
 // Run with `npm run icons`. Output is committed, so this only needs re-running if the design changes.
 import { deflateSync } from 'node:zlib';
 import { writeFileSync } from 'node:fs';
 
-const BG = [0x09, 0x09, 0x0b];
-const FG = [0x10, 0xb9, 0x81]; // emerald-500
+const BG = [0xff, 0xff, 0xff];
+const FG = [0xc1, 0x12, 0x1f]; // red, matching the app accent
 
 // Bars in a 0..1 unit square; `scale` shrinks them toward the centre (maskable safe zone).
 function bars(scale) {
@@ -91,9 +91,9 @@ function png(size, raw) {
 
 function svg() {
   const rects = bars(1)
-    .map((b) => `<rect x="${(b.x0 * 64).toFixed(2)}" y="${(b.y0 * 64).toFixed(2)}" width="${((b.x1 - b.x0) * 64).toFixed(2)}" height="${((b.y1 - b.y0) * 64).toFixed(2)}" rx="${(b.r * 64).toFixed(2)}" fill="#10b981"/>`)
+    .map((b) => `<rect x="${(b.x0 * 64).toFixed(2)}" y="${(b.y0 * 64).toFixed(2)}" width="${((b.x1 - b.x0) * 64).toFixed(2)}" height="${((b.y1 - b.y0) * 64).toFixed(2)}" rx="${(b.r * 64).toFixed(2)}" fill="#c1121f"/>`)
     .join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#09090b"/>${rects}</svg>\n`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#ffffff"/>${rects}</svg>\n`;
 }
 
 const out = new URL('../public/', import.meta.url);

@@ -1,7 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { exercisesFor, isDeload, EXERCISES, type Exercise } from './routine';
 import {
   beats,
+  effortLabel,
+  emptyState,
+  load,
+  STORAGE_KEY,
   nextTarget,
   currentWeek,
   formatSets,
@@ -152,5 +156,22 @@ describe('nextTarget', () => {
   it('holds the load on deload weeks', () => {
     const t = nextTarget(ex('db-overhead-press'), prev(3, [w(50, 12), w(50, 12), w(50, 12)]), 4, 'kg');
     expect(t).toMatchObject({ weightKg: 50, reps: 12, progressed: false });
+  });
+});
+
+describe('intensity and rest settings', () => {
+  it("shows each set's intensity in last week's summary", () => {
+    expect(formatSets([{ weightKg: 60, reps: 11, effort: 3, at }, w(60, 8)], 'kg')).toBe('60 kg × 11 (Hard), 60 × 8');
+    expect(effortLabel(4)).toBe('Max');
+    expect(effortLabel(undefined)).toBeUndefined();
+  });
+  it('defaults rest to 60 s, manual start', () => {
+    expect(emptyState()).toMatchObject({ restSeconds: 60, autoRest: false });
+  });
+  it('fills in rest settings for data saved before they existed', () => {
+    const store = new Map<string, string>([[STORAGE_KEY, JSON.stringify({ startDate: '2026-09-01', unit: 'lb', logs: {}, daysDone: {}, cardio: {} })]]);
+    vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null });
+    expect(load()).toMatchObject({ startDate: '2026-09-01', unit: 'lb', restSeconds: 60, autoRest: false });
+    vi.unstubAllGlobals();
   });
 });

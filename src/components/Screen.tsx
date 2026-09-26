@@ -40,7 +40,7 @@ export function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElemen
     <button
       type="button"
       {...props}
-      className={`h-12 w-full rounded-xl bg-emerald-700 text-white font-semibold text-lg active:bg-emerald-800 disabled:bg-zinc-200 disabled:text-zinc-500 ${props.className ?? ''}`}
+      className={`h-12 w-full rounded-xl bg-red-700 text-white font-semibold text-lg active:bg-red-800 disabled:bg-zinc-200 disabled:text-zinc-500 ${props.className ?? ''}`}
     />
   );
 }

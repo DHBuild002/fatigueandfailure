@@ -5,10 +5,21 @@ export type Unit = 'kg' | 'lb';
 export type Band = 'light' | 'medium' | 'heavy';
 export const BANDS: Band[] = ['light', 'medium', 'heavy'];
 
+// How hard a set felt, 1 (easy) to 4 (max effort).
+export type Effort = 1 | 2 | 3 | 4;
+export const EFFORTS: { value: Effort; label: string }[] = [
+  { value: 1, label: 'Easy' },
+  { value: 2, label: 'Moderate' },
+  { value: 3, label: 'Hard' },
+  { value: 4, label: 'Max' },
+];
+export const effortLabel = (e?: Effort) => EFFORTS.find((x) => x.value === e)?.label;
+
 export interface SetLog {
   weightKg?: number;
   band?: Band;
   reps: number;
+  effort?: Effort;
   at: string;
 }
 
@@ -24,12 +35,25 @@ export interface State {
   logs: Record<string, SetLog[]>; // key: `${week}:${exerciseId}`
   daysDone: Record<string, boolean>; // key: `${week}:${day}`
   cardio: Record<number, Cardio>;
+  restSeconds: RestSeconds; // rest timer length
+  autoRest: boolean; // start the rest timer automatically after each logged set
 }
+
+export type RestSeconds = 30 | 60 | 90;
+export const REST_OPTIONS: RestSeconds[] = [30, 60, 90];
 
 export const STORAGE_KEY = 'overload:v1';
 export const KG_PER_LB = 1 / 2.20462;
 
-export const emptyState = (): State => ({ startDate: '', unit: 'kg', logs: {}, daysDone: {}, cardio: {} });
+export const emptyState = (): State => ({
+  startDate: '',
+  unit: 'kg',
+  logs: {},
+  daysDone: {},
+  cardio: {},
+  restSeconds: 60,
+  autoRest: false,
+});
 
 // ---------- persistence ----------
 
@@ -230,7 +254,8 @@ export function formatSets(sets: SetLog[], unit: Unit): string {
   return sets
     .map((s, i) => {
       const load = s.band ?? `${formatNumber(toDisplay(s.weightKg ?? 0, unit))}${i === 0 ? ` ${unit}` : ''}`;
-      return `${load} × ${s.reps}`;
+      const effort = effortLabel(s.effort);
+      return `${load} × ${s.reps}${effort ? ` (${effort})` : ''}`;
     })
     .join(', ');
 }
@@ -274,6 +299,14 @@ export function saveCardio(week: number, entry: Cardio) {
 
 export function setUnit(unit: Unit) {
   setState((s) => ({ ...s, unit }));
+}
+
+export function setRestSeconds(restSeconds: RestSeconds) {
+  setState((s) => ({ ...s, restSeconds }));
+}
+
+export function setAutoRest(autoRest: boolean) {
+  setState((s) => ({ ...s, autoRest }));
 }
 
 export function setStartDate(startDate: string) {
