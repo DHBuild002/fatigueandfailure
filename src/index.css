@@ -7,6 +7,9 @@
 }
 
 :root {
+  /* Space kept under the bottom action bar for a host's floating badge (e.g. Netlify's
+     in the bottom corner). Not needed when installed to the home screen, where no badge shows. */
+  --host-badge-offset: 0px;
   color-scheme: light;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
@@ -15,4 +18,10 @@
 body {
   @apply bg-zinc-100 text-zinc-900 antialiased;
   overscroll-behavior-y: none;
+}
+
+@media (display-mode: browser) {
+  :root {
+    --host-badge-offset: 64px;
+  }
 }
