@@ -67,7 +67,7 @@ function subscribe(l: () => void) {
 }
 
 // Seconds left (0 when finished), or null when no rest is running.
-export function useRest(): { remaining: number | null; total: number } {
+export function useRest(): { remaining: number | null; total: number; endsAt: number | null } {
   const t = useSyncExternalStore(subscribe, () => timer, () => timer);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -75,8 +75,8 @@ export function useRest(): { remaining: number | null; total: number } {
     const id = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(id);
   }, [t.endsAt]);
-  if (t.endsAt === null) return { remaining: null, total: 0 };
-  return { remaining: Math.max(0, Math.ceil((t.endsAt - now) / 1000)), total: t.total };
+  if (t.endsAt === null) return { remaining: null, total: 0, endsAt: null };
+  return { remaining: Math.max(0, Math.ceil((t.endsAt - now) / 1000)), total: t.total, endsAt: t.endsAt };
 }
 
 export const formatClock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;

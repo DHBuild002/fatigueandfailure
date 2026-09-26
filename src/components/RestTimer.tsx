@@ -1,11 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { REST_OPTIONS, setRestSeconds, type RestSeconds } from '../store';
 import { formatClock, startRest, stopRest, useRest } from '../timer';
 
-// Bottom-bar content for the day screen: [Rest] [Finish day] when idle,
-// a countdown with Stop while resting, and a short "Rest over" state after.
+// Bottom-bar content for the day screen: the Rest button stacked above Finish day.
+// While resting, a red fill sweeps across the Rest button from left to right, led by a
+// soft radial glow, and reaches the right edge as the countdown hits 0:00.
 export function RestBar({ seconds, finish }: { seconds: RestSeconds; finish: React.ReactNode }) {
-  const { remaining, total } = useRest();
+  const { remaining, total, endsAt } = useRest();
 
   // Clear the "Rest over" state a few seconds after it appears.
   useEffect(() => {
@@ -14,50 +15,55 @@ export function RestBar({ seconds, finish }: { seconds: RestSeconds; finish: Rea
     return () => clearTimeout(id);
   }, [remaining]);
 
-  if (remaining === null) {
-    return (
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => startRest(seconds)}
-          className="h-12 flex-[2] min-w-0 rounded-xl border-2 border-red-700 text-red-700 font-semibold text-lg active:bg-red-50"
-        >
-          Rest {seconds}s
-        </button>
-        <div className="flex-[3] min-w-0">{finish}</div>
-      </div>
-    );
-  }
+  const running = remaining !== null && remaining > 0;
+  const over = remaining === 0;
+  const label = over ? 'Rest over · next set' : running ? `Resting ${formatClock(remaining)}` : `Rest ${seconds}s`;
+  const hint = running ? 'Tap to stop' : null;
 
-  if (remaining === 0) {
-    return (
+  return (
+    <div className="flex flex-col gap-2">
       <button
         type="button"
-        onClick={stopRest}
-        role="status"
-        className="h-12 w-full rounded-xl bg-red-700 text-white font-semibold text-lg animate-pulse"
+        onClick={() => (remaining === null ? startRest(seconds) : stopRest())}
+        aria-label={running ? `Resting, ${remaining} seconds left. Tap to stop.` : label}
+        className="relative h-12 w-full overflow-hidden rounded-xl border-2 border-red-700 bg-white text-red-700 font-semibold text-lg active:bg-red-50"
       >
-        Rest over · next set
+        <ButtonLabel label={label} hint={hint} />
+        {endsAt !== null && (
+          // Re-keyed per rest so the sweep restarts from the left each time.
+          <RestFill key={endsAt} endsAt={endsAt} total={total} over={over} label={label} hint={hint} />
+        )}
       </button>
-    );
-  }
-
-  const pct = ((total - remaining) / total) * 100;
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex-1 min-w-0" role="timer" aria-live="off" aria-label={`Rest, ${remaining} seconds left`}>
-        <div className="flex items-baseline justify-between">
-          <span className="text-sm text-zinc-600">Resting</span>
-          <span className="text-2xl font-semibold tabular-nums text-red-700">{formatClock(remaining)}</span>
-        </div>
-        <div className="mt-1 h-1.5 rounded-full bg-zinc-200 overflow-hidden">
-          <div className="h-full bg-red-700 transition-[width] duration-300 ease-linear" style={{ width: `${pct}%` }} />
-        </div>
-      </div>
-      <button type="button" onClick={stopRest} className="h-12 px-5 rounded-xl bg-zinc-100 text-zinc-800 font-medium active:bg-zinc-300">
-        Stop
-      </button>
+      {finish}
     </div>
+  );
+}
+
+function ButtonLabel({ label, hint }: { label: string; hint: string | null }) {
+  return (
+    <span className="absolute inset-0 flex items-center justify-center gap-2 tabular-nums">
+      {label}
+      {hint && <span className="text-xs font-medium opacity-80">· {hint}</span>}
+    </span>
+  );
+}
+
+// The filled part of the button: red with white text, revealed left to right by a
+// clip-path animation. The animation runs in CSS for the rest's full length and is
+// offset by the time already elapsed, so it stays in sync after re-renders or
+// returning to the screen mid-rest.
+function RestFill({ endsAt, total, over, label, hint }: { endsAt: number; total: number; over: boolean; label: string; hint: string | null }) {
+  const [elapsed] = useState(() => Math.min(total, Math.max(0, total - (endsAt - Date.now()) / 1000)));
+  const timing = { animationDuration: `${total}s`, animationDelay: `-${elapsed}s` };
+  return (
+    <span
+      aria-hidden="true"
+      className={`absolute inset-0 bg-red-700 text-white ${over ? 'rest-done' : 'rest-reveal'}`}
+      style={over ? undefined : timing}
+    >
+      <ButtonLabel label={label} hint={hint} />
+      {!over && <span className="rest-glow" style={timing} />}
+    </span>
   );
 }
 
