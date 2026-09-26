@@ -22,7 +22,11 @@ export default function App() {
     setSeenCurrent(current);
     setWeek(current);
   }
-  useEffect(() => window.scrollTo(0, 0), [view]);
+  // Block body: an effect must return nothing or a cleanup function. Some embedded
+  // browsers make scrollTo return a value, which React would then call as a cleanup.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
 
   if (!state.startDate) return <FirstLaunch />;
 
@@ -65,17 +69,17 @@ function FirstLaunch() {
   const [date, setDate] = useState(todayISO());
   return (
     <Screen title="Overload" action={<PrimaryButton disabled={!date} onClick={() => setStartDate(date)}>Start</PrimaryButton>}>
-      <p className="text-zinc-300">Failure &amp; Fatigue: a 5-day routine over 12 weeks, with a deload every 4th week.</p>
+      <p className="text-zinc-700">Failure &amp; Fatigue: a 5-day routine over 12 weeks, with a deload every 4th week.</p>
       <label className="block space-y-2">
         <span className="block text-2xl font-semibold">When does week 1 start?</span>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="h-12 w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 text-lg [color-scheme:dark] focus:outline-none focus:border-emerald-500"
+          className="h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-emerald-600"
         />
       </label>
-      <p className="text-sm text-zinc-400">Weights are in kg by default. You can switch to lb in Settings.</p>
+      <p className="text-sm text-zinc-600">Weights are in kg by default. You can switch to lb in Settings.</p>
     </Screen>
   );
 }

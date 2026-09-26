@@ -8,7 +8,7 @@ interface Props {
   onBack: () => void;
 }
 
-const field = 'h-12 w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 text-lg focus:outline-none focus:border-emerald-500';
+const field = 'h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-emerald-600';
 const numField = `${field} text-2xl text-center`;
 
 export function Cardio({ state, week, onBack }: Props) {
@@ -55,7 +55,7 @@ export function Cardio({ state, week, onBack }: Props) {
         }}
       >
         <label className="block space-y-2">
-          <span className="text-sm text-zinc-400">Type</span>
+          <span className="text-sm text-zinc-600">Type</span>
           <input className={field} value={type} onChange={(e) => setType(e.target.value)} list="cardio-types" autoCapitalize="sentences" />
           <datalist id="cardio-types">
             <option value="Run" />
@@ -66,11 +66,11 @@ export function Cardio({ state, week, onBack }: Props) {
           </datalist>
         </label>
         <label className="block space-y-2">
-          <span className="text-sm text-zinc-400">Duration (minutes)</span>
+          <span className="text-sm text-zinc-600">Duration (minutes)</span>
           <input className={numField} inputMode="numeric" pattern="[0-9]*" value={minutes} onChange={(e) => setMinutes(e.target.value.replace(/\D/g, ''))} />
         </label>
         <label className="block space-y-2">
-          <span className="text-sm text-zinc-400">Distance ({du}, optional)</span>
+          <span className="text-sm text-zinc-600">Distance ({du}, optional)</span>
           <input className={numField} inputMode="decimal" value={distance} onChange={(e) => setDistance(e.target.value)} />
         </label>
         <button type="submit" hidden />
@@ -79,7 +79,7 @@ export function Cardio({ state, week, onBack }: Props) {
       {existing && (
         <button
           type="button"
-          className="h-12 w-full text-sm text-zinc-400 underline underline-offset-2"
+          className="h-12 w-full text-sm text-zinc-600 underline underline-offset-2"
           onClick={() => {
             setState((s) => {
               const cardio = { ...s.cardio };

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { exercisesFor, isDeload, EXERCISES } from './routine';
 import {
   beats,
+  nextTarget,
   currentWeek,
   formatSets,
   fromDisplay,
@@ -115,5 +116,40 @@ describe('selectors and formatting', () => {
   it('formats last week like the PRD example', () => {
     expect(formatSets([w(60, 11), w(60, 8)], 'kg')).toBe('60 kg × 11, 60 × 8');
     expect(formatSets([{ band: 'medium', reps: 15, at }], 'kg')).toBe('medium × 15');
+  });
+});
+
+describe('nextTarget', () => {
+  const ex = (id: string) => EXERCISES.find((e) => e.id === id)!;
+  const prev = (week: number, sets: SetLog[]) => ({ week, sets });
+
+  it('is null with no history', () => {
+    expect(nextTarget(ex('bench-press'), null, 1, 'kg')).toBeNull();
+  });
+  it('A: same weight as the best set, one more rep', () => {
+    const t = nextTarget(ex('bench-press'), prev(1, [w(60, 11), w(62.5, 6), w(60, 8)]), 2, 'kg');
+    expect(t).toMatchObject({ weightKg: 62.5, reps: 7, progressed: false });
+  });
+  it('B: adds 2.5 kg once every prescribed set hits its reps', () => {
+    const t = nextTarget(ex('floor-press'), prev(1, [w(50, 12), w(50, 12), w(50, 12)]), 2, 'kg');
+    expect(t).toMatchObject({ reps: 12, progressed: true });
+    expect(t!.weightKg).toBeCloseTo(52.5);
+  });
+  it('B: repeats the weight when a set fell short', () => {
+    const t = nextTarget(ex('floor-press'), prev(1, [w(50, 12), w(50, 12), w(50, 10)]), 2, 'kg');
+    expect(t).toMatchObject({ weightKg: 50, reps: 12, progressed: false });
+  });
+  it('B: steps 5 lb in lb mode', () => {
+    const t = nextTarget(ex('floor-press'), prev(1, [w(fromDisplay(135, 'lb'), 12), w(fromDisplay(135, 'lb'), 12), w(fromDisplay(135, 'lb'), 12)]), 2, 'lb');
+    expect(toDisplay(t!.weightKg!, 'lb')).toBe(140);
+  });
+  it('B band: moves to the next band, and adds reps once on heavy', () => {
+    const b = (band: 'medium' | 'heavy', reps: number): SetLog => ({ band, reps, at });
+    expect(nextTarget(ex('band-curl'), prev(1, [b('medium', 15), b('medium', 15), b('medium', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reps: 15 });
+    expect(nextTarget(ex('band-curl'), prev(1, [b('heavy', 15), b('heavy', 16), b('heavy', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reps: 17 });
+  });
+  it('holds the load on deload weeks', () => {
+    const t = nextTarget(ex('floor-press'), prev(3, [w(50, 12), w(50, 12), w(50, 12)]), 4, 'kg');
+    expect(t).toMatchObject({ weightKg: 50, reps: 12, progressed: false });
   });
 });

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { TOTAL_WEEKS, type Day } from './routine';
+import { TOTAL_WEEKS, isDeload, type Day, type Exercise } from './routine';
 
 export type Unit = 'kg' | 'lb';
 export type Band = 'light' | 'medium' | 'heavy';
@@ -149,6 +149,49 @@ export function topBand(sets: SetLog[]): Band | undefined {
   let best: Band | undefined;
   for (const s of sets) if (bandRank(s.band) > bandRank(best)) best = s.band;
   return best;
+}
+
+// The best set of a session: heaviest load (as displayed), then most reps.
+export function bestSet(sets: SetLog[], unit: Unit): SetLog | undefined {
+  let best: SetLog | undefined;
+  for (const s of sets) if (!best || beats(s, best, unit)) best = s;
+  return best;
+}
+
+export interface Target {
+  weightKg?: number;
+  band?: Band;
+  reps: number;
+  progressed: boolean; // load goes up from last time
+}
+
+// Next-attempt target, from the best set last time (double progression):
+// - A (failure): same load, one more rep than the best set.
+// - B (steady): if every prescribed set hit the prescribed reps at that load, add one
+//   increment (2.5 kg / 5 lb, or the next band); otherwise repeat the load for the prescribed reps.
+// - Deload weeks hold the load.
+export function nextTarget(ex: Exercise, prev: Previous | null, week: number, unit: Unit): Target | null {
+  if (!prev) return null;
+  const best = bestSet(prev.sets, unit);
+  if (!best) return null;
+  const same = { weightKg: best.weightKg, band: best.band };
+
+  if (ex.role === 'A' || !ex.scheme) return { ...same, reps: best.reps + 1, progressed: false };
+
+  const { sets, reps } = ex.scheme;
+  if (isDeload(week)) return { ...same, reps, progressed: false };
+
+  const sameLoad = (s: SetLog) =>
+    s.band ? s.band === best.band : toDisplay(s.weightKg ?? 0, unit) === toDisplay(best.weightKg ?? 0, unit);
+  const hit = prev.sets.filter((s) => sameLoad(s) && s.reps >= reps).length >= sets;
+  if (!hit) return { ...same, reps, progressed: false };
+
+  if (ex.load === 'band') {
+    const next = BANDS[bandRank(best.band) + 1];
+    return next ? { band: next, reps, progressed: true } : { ...same, reps: best.reps + 1, progressed: false };
+  }
+  const up = toDisplay(best.weightKg ?? 0, unit) + weightStep(unit);
+  return { weightKg: fromDisplay(up, unit), reps, progressed: true };
 }
 
 // ---------- units ----------

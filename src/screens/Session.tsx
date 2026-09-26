@@ -34,7 +34,7 @@ export function Session({ state, week, day, onBack }: Props) {
         </PrimaryButton>
       }
     >
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm text-zinc-600">
         {isDeload(week)
           ? 'Deload week: B exercises only. 2–3 rounds.'
           : 'Superset A then B. Rest 90–120 s between rounds, 2–3 rounds.'}
@@ -45,7 +45,7 @@ export function Session({ state, week, day, onBack }: Props) {
       ))}
 
       {done && (
-        <button type="button" onClick={() => setDayDone(week, day, false)} className="h-12 w-full text-sm text-zinc-400 underline underline-offset-2">
+        <button type="button" onClick={() => setDayDone(week, day, false)} className="h-12 w-full text-sm text-zinc-600 underline underline-offset-2">
           Mark day as not done
         </button>
       )}

@@ -8,7 +8,7 @@ interface Props {
   onBack: () => void;
 }
 
-const card = 'rounded-2xl bg-zinc-900 p-4 space-y-3';
+const card = 'rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 space-y-3';
 
 function exportJSON() {
   const blob = new Blob([JSON.stringify(getState(), null, 2)], { type: 'application/json' });
@@ -28,14 +28,14 @@ export function Settings({ state, onBack }: Props) {
       <section className={card}>
         <label className="block space-y-2">
           <span className="block text-lg font-semibold">Start date</span>
-          <span className="block text-sm text-zinc-400">
+          <span className="block text-sm text-zinc-600">
             Week 1, day 1. Today is week {currentWeek(state.startDate)} of {TOTAL_WEEKS}.
           </span>
           <input
             type="date"
             value={state.startDate}
             onChange={(e) => e.target.value && setStartDate(e.target.value)}
-            className="h-12 w-full rounded-xl bg-zinc-950 border border-zinc-700 px-4 text-lg [color-scheme:dark] focus:outline-none focus:border-emerald-500"
+            className="h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-emerald-600"
           />
         </label>
       </section>
@@ -52,27 +52,27 @@ export function Settings({ state, onBack }: Props) {
               role="radio"
               aria-checked={state.unit === u}
               onClick={() => setUnit(u)}
-              className={`h-12 flex-1 rounded-xl text-lg ${state.unit === u ? 'bg-emerald-500 text-zinc-950 font-semibold' : 'bg-zinc-800 text-zinc-300'}`}
+              className={`h-12 flex-1 rounded-xl text-lg ${state.unit === u ? 'bg-emerald-700 text-white font-semibold' : 'bg-zinc-100 text-zinc-700'}`}
             >
               {u === 'kg' ? 'kg · km' : 'lb · mi'}
             </button>
           ))}
         </div>
-        <p className="text-sm text-zinc-400">Weights are stored in kg and converted for display, so switching never loses data.</p>
+        <p className="text-sm text-zinc-600">Weights are stored in kg and converted for display, so switching never loses data.</p>
       </section>
 
       <section className={card}>
         <h2 className="text-lg font-semibold">Data</h2>
-        <p className="text-sm text-zinc-400">Everything is stored on this device only. Export a copy to keep a backup.</p>
+        <p className="text-sm text-zinc-600">Everything is stored on this device only. Export a copy to keep a backup.</p>
         <PrimaryButton onClick={exportJSON}>Export JSON</PrimaryButton>
         {confirmReset ? (
-          <div className="space-y-3 rounded-xl border border-red-500/50 p-3">
-            <p className="text-sm text-zinc-200">Delete all logged sets, cardio and settings? This can't be undone.</p>
+          <div className="space-y-3 rounded-xl border border-red-300 p-3">
+            <p className="text-sm text-zinc-800">Delete all logged sets, cardio and settings? This can't be undone.</p>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setConfirmReset(false)} className="h-12 flex-1 rounded-xl bg-zinc-800 text-zinc-200 font-medium">
+              <button type="button" onClick={() => setConfirmReset(false)} className="h-12 flex-1 rounded-xl bg-zinc-100 text-zinc-800 font-medium">
                 Cancel
               </button>
-              <button type="button" onClick={resetState} className="h-12 flex-1 rounded-xl bg-red-500 text-zinc-950 font-semibold">
+              <button type="button" onClick={resetState} className="h-12 flex-1 rounded-xl bg-red-600 text-white font-semibold">
                 Delete everything
               </button>
             </div>
@@ -81,7 +81,7 @@ export function Settings({ state, onBack }: Props) {
           <button
             type="button"
             onClick={() => setConfirmReset(true)}
-            className="h-12 w-full rounded-xl border border-red-500/50 text-red-400 font-medium active:bg-red-500/10"
+            className="h-12 w-full rounded-xl border border-red-300 text-red-700 font-medium active:bg-red-50"
           >
             Reset all data
           </button>

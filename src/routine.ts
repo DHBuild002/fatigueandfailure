@@ -11,6 +11,8 @@ export interface Exercise {
   prescription: string;
   load: 'weight' | 'band';
   perLeg?: boolean;
+  // Prescribed sets × reps for steady (B) work. Failure (A) sets are open-ended.
+  scheme?: { sets: number; reps: number };
 }
 
 export const TOTAL_WEEKS = 12;
@@ -27,21 +29,21 @@ export const DAYS: { day: Day; name: string }[] = [
 // separate exercises so each keeps its own log.
 export const EXERCISES: Exercise[] = [
   { id: 'bulgarian-split-squat', day: 1, role: 'A', name: 'Dumbbell Bulgarian split squat', prescription: 'Sets to failure per leg', load: 'weight', perLeg: true },
-  { id: 'hip-thrust', day: 1, role: 'B', name: 'Barbell hip thrust', prescription: '3×15, 2 s hold at top', load: 'weight' },
+  { id: 'hip-thrust', day: 1, role: 'B', name: 'Barbell hip thrust', prescription: '3×15, 2 s hold at top', load: 'weight', scheme: { sets: 3, reps: 15 } },
 
   { id: 'goblet-squat', day: 2, role: 'A', name: 'Dumbbell goblet squat', prescription: 'Sets to failure', load: 'weight' },
-  { id: 'walking-lunge', day: 2, role: 'B', name: 'Walking lunges (dumbbells)', prescription: '3×16 (8/leg)', load: 'weight' },
+  { id: 'walking-lunge', day: 2, role: 'B', name: 'Walking lunges (dumbbells)', prescription: '3×16 (8/leg)', load: 'weight', scheme: { sets: 3, reps: 16 } },
 
   { id: 'barbell-curl', day: 3, role: 'A', name: 'Barbell curl', prescription: 'Failure pair, back-to-back with tricep extension', load: 'weight' },
   { id: 'db-overhead-tricep-extension', day: 3, role: 'A', name: 'DB overhead tricep extension', prescription: 'Failure pair, straight after curl', load: 'weight' },
-  { id: 'band-curl', day: 3, role: 'B', name: 'Band curl', prescription: '3×15, paired with pushdown', load: 'band' },
-  { id: 'band-tricep-pushdown', day: 3, role: 'B', name: 'Band tricep pushdown', prescription: '3×15, paired with curl', load: 'band' },
+  { id: 'band-curl', day: 3, role: 'B', name: 'Band curl', prescription: '3×15, paired with pushdown', load: 'band', scheme: { sets: 3, reps: 15 } },
+  { id: 'band-tricep-pushdown', day: 3, role: 'B', name: 'Band tricep pushdown', prescription: '3×15, paired with curl', load: 'band', scheme: { sets: 3, reps: 15 } },
 
   { id: 'bench-press', day: 4, role: 'A', name: 'Barbell bench press', prescription: 'Sets to failure', load: 'weight' },
-  { id: 'floor-press', day: 4, role: 'B', name: 'Barbell floor press', prescription: '3×12', load: 'weight' },
+  { id: 'floor-press', day: 4, role: 'B', name: 'Barbell floor press', prescription: '3×12', load: 'weight', scheme: { sets: 3, reps: 12 } },
 
   { id: 'bent-over-row', day: 5, role: 'A', name: 'Barbell bent-over row', prescription: 'Sets to failure', load: 'weight' },
-  { id: 'romanian-deadlift', day: 5, role: 'B', name: 'Barbell Romanian deadlift', prescription: '3×12', load: 'weight' },
+  { id: 'romanian-deadlift', day: 5, role: 'B', name: 'Barbell Romanian deadlift', prescription: '3×12', load: 'weight', scheme: { sets: 3, reps: 12 } },
 ];
 
 export const isDeload = (week: number) => week % 4 === 0;
