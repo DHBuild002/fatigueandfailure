@@ -52,7 +52,7 @@ function save(s: State) {
   }
 }
 
-let state: State = typeof localStorage === 'undefined' ? emptyState() : load();
+let state: State = load(); // load() falls back to empty state if storage is missing or blocked
 const listeners = new Set<() => void>();
 
 export function getState() {

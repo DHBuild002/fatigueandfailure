@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { currentWeek, getState, resetState, setStartDate, setUnit, todayISO, type State, type Unit } from '../store';
 import { PrimaryButton, Screen } from '../components/Screen';
 import { TOTAL_WEEKS } from '../routine';
@@ -20,6 +21,8 @@ function exportJSON() {
 }
 
 export function Settings({ state, onBack }: Props) {
+  // Inline confirmation: no modals, and window.confirm() is blocked in some embedded browsers.
+  const [confirmReset, setConfirmReset] = useState(false);
   return (
     <Screen title="Settings" onBack={onBack}>
       <section className={card}>
@@ -62,15 +65,27 @@ export function Settings({ state, onBack }: Props) {
         <h2 className="text-lg font-semibold">Data</h2>
         <p className="text-sm text-zinc-400">Everything is stored on this device only. Export a copy to keep a backup.</p>
         <PrimaryButton onClick={exportJSON}>Export JSON</PrimaryButton>
-        <button
-          type="button"
-          onClick={() => {
-            if (window.confirm('Delete all logged sets, cardio and settings? This cannot be undone.')) resetState();
-          }}
-          className="h-12 w-full rounded-xl border border-red-500/50 text-red-400 font-medium active:bg-red-500/10"
-        >
-          Reset all data
-        </button>
+        {confirmReset ? (
+          <div className="space-y-3 rounded-xl border border-red-500/50 p-3">
+            <p className="text-sm text-zinc-200">Delete all logged sets, cardio and settings? This can't be undone.</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setConfirmReset(false)} className="h-12 flex-1 rounded-xl bg-zinc-800 text-zinc-200 font-medium">
+                Cancel
+              </button>
+              <button type="button" onClick={resetState} className="h-12 flex-1 rounded-xl bg-red-500 text-zinc-950 font-semibold">
+                Delete everything
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmReset(true)}
+            className="h-12 w-full rounded-xl border border-red-500/50 text-red-400 font-medium active:bg-red-500/10"
+          >
+            Reset all data
+          </button>
+        )}
       </section>
 
       <p className="text-center text-xs text-zinc-500">Overload v{__APP_VERSION__}</p>
