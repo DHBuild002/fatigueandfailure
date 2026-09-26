@@ -25,3 +25,16 @@ body {
     --host-badge-offset: 64px;
   }
 }
+
+/* iOS Safari gives date inputs a native minimum width and centred value, so they can
+   spill past a full-width container. Let them shrink to their box like other inputs. */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}

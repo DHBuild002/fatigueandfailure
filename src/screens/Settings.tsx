@@ -73,7 +73,7 @@ export function Settings({ state, onBack }: Props) {
                 Cancel
               </button>
               <button type="button" onClick={resetState} className="h-12 flex-1 rounded-xl bg-red-600 text-white font-semibold">
-                Delete everything
+                Delete all data
               </button>
             </div>
           </div>
