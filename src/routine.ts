@@ -10,7 +10,7 @@ export interface Exercise {
   name: string;
   prescription: string;
   load: 'weight' | 'band';
-  perLeg?: boolean;
+  perSide?: 'leg' | 'arm'; // reps are logged per leg / per arm
   // Prescribed sets × reps for steady (B) work. Failure (A) sets are open-ended.
   scheme?: { sets: number; reps: number };
 }
@@ -25,19 +25,19 @@ export const DAYS: { day: Day; name: string }[] = [
   { day: 5, name: 'Back' },
 ];
 
-// Listed in A→B order within each day. Day 3 pairs are stored as four
-// separate exercises so each keeps its own log.
+// Listed in A→B order within each day. Day 3 is two failure curls then two steady
+// curls, each stored as its own exercise so it keeps its own log.
 export const EXERCISES: Exercise[] = [
-  { id: 'bulgarian-split-squat', day: 1, role: 'A', name: 'Dumbbell Bulgarian split squat', prescription: 'Sets to failure per leg', load: 'weight', perLeg: true },
-  { id: 'hip-thrust', day: 1, role: 'B', name: 'Barbell hip thrust', prescription: '3×15, 2 s hold at top', load: 'weight', scheme: { sets: 3, reps: 15 } },
+  { id: 'barbell-squat', day: 1, role: 'A', name: 'Barbell squat', prescription: 'Sets to failure', load: 'weight' },
+  { id: 'tempo-barbell-squat', day: 1, role: 'B', name: 'Tempo barbell squat', prescription: '3×8, 3 s lowering', load: 'weight', scheme: { sets: 3, reps: 8 } },
 
-  { id: 'goblet-squat', day: 2, role: 'A', name: 'Dumbbell goblet squat', prescription: 'Sets to failure', load: 'weight' },
-  { id: 'walking-lunge', day: 2, role: 'B', name: 'Walking lunges (dumbbells)', prescription: '3×16 (8/leg)', load: 'weight', scheme: { sets: 3, reps: 16 } },
+  { id: 'front-squat', day: 2, role: 'A', name: 'Front squat', prescription: 'Sets to failure', load: 'weight' },
+  { id: 'tempo-goblet-squat', day: 2, role: 'B', name: 'Tempo goblet squat', prescription: '3×10, 3 s lowering', load: 'weight', scheme: { sets: 3, reps: 10 } },
 
-  { id: 'barbell-curl', day: 3, role: 'A', name: 'Barbell curl', prescription: 'Failure pair, back-to-back with tricep extension', load: 'weight' },
-  { id: 'db-overhead-tricep-extension', day: 3, role: 'A', name: 'DB overhead tricep extension', prescription: 'Failure pair, straight after curl', load: 'weight' },
-  { id: 'band-curl', day: 3, role: 'B', name: 'Band curl', prescription: '3×15, paired with pushdown', load: 'band', scheme: { sets: 3, reps: 15 } },
-  { id: 'band-tricep-pushdown', day: 3, role: 'B', name: 'Band tricep pushdown', prescription: '3×15, paired with curl', load: 'band', scheme: { sets: 3, reps: 15 } },
+  { id: 'barbell-curl', day: 3, role: 'A', name: 'Barbell curl', prescription: 'Sets to failure', load: 'weight' },
+  { id: 'single-arm-hammer-curl', day: 3, role: 'A', name: 'Single-arm hammer curl', prescription: 'Sets to failure per arm', load: 'weight', perSide: 'arm' },
+  { id: 'zottman-curl', day: 3, role: 'B', name: 'Zottman curl', prescription: '3×12', load: 'weight', scheme: { sets: 3, reps: 12 } },
+  { id: 'wrist-flexor-curl', day: 3, role: 'B', name: 'Wrist flexor curl', prescription: '3×15', load: 'weight', scheme: { sets: 3, reps: 15 } },
 
   { id: 'bench-press', day: 4, role: 'A', name: 'Barbell bench press', prescription: 'Sets to failure', load: 'weight' },
   { id: 'db-overhead-press', day: 4, role: 'B', name: 'Dumbbell overhead press', prescription: '3×12', load: 'weight', scheme: { sets: 3, reps: 12 } },

@@ -72,14 +72,14 @@ export function ExerciseCard({ exercise, week, state }: Props) {
           <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
             <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Last best</dt>
             <dd className="text-sm font-medium tabular-nums text-zinc-700">
-              <StatValue set={best} unit={state.unit} perLeg={exercise.perLeg} />
+              <StatValue set={best} unit={state.unit} perSide={exercise.perSide} />
             </dd>
             <dd className="text-xs text-zinc-500">Week {prev!.week}</dd>
           </div>
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
             <dt className="text-xs font-medium uppercase tracking-wide text-emerald-800">Target</dt>
             <dd className="text-sm font-medium tabular-nums text-emerald-800">
-              <StatValue set={target} unit={state.unit} perLeg={exercise.perLeg} />
+              <StatValue set={target} unit={state.unit} perSide={exercise.perSide} />
             </dd>
             <dd className="text-xs text-emerald-800">{targetNote(exercise, target, week, state.unit)}</dd>
           </div>
@@ -93,7 +93,7 @@ export function ExerciseCard({ exercise, week, state }: Props) {
       {prev && (
         <p className="text-sm text-zinc-600">
           Last{prev.week !== week - 1 && ` (week ${prev.week})`}: {formatSets(prev.sets, state.unit)}
-          {exercise.perLeg && ' per leg'}
+          {exercise.perSide && ` per ${exercise.perSide}`}
         </p>
       )}
 
@@ -123,7 +123,7 @@ export function ExerciseCard({ exercise, week, state }: Props) {
                   set={s}
                   prev={prev?.sets[i]}
                   unit={state.unit}
-                  perLeg={exercise.perLeg}
+                  perSide={exercise.perSide}
                   onEdit={() => {
                     setDraft(null);
                     setEditing(i);
@@ -171,14 +171,14 @@ function targetNote(ex: Exercise, t: Target, week: number, unit: Unit): string {
 }
 
 // "60 kg × 12/leg", breaking only between the load and the reps on narrow screens.
-function StatValue({ set, unit, perLeg }: { set: Pick<SetLog, 'weightKg' | 'band' | 'reps'>; unit: Unit; perLeg?: boolean }) {
+function StatValue({ set, unit, perSide }: { set: Pick<SetLog, 'weightKg' | 'band' | 'reps'>; unit: Unit; perSide?: 'leg' | 'arm' }) {
   const load = set.band ?? `${formatNumber(toDisplay(set.weightKg ?? 0, unit))} ${unit}`;
   return (
     <>
       <span className={`whitespace-nowrap ${set.band ? 'capitalize' : ''}`}>{load}</span>{' '}
       <span className="whitespace-nowrap">
         × {set.reps}
-        {perLeg && <span className="text-sm font-normal opacity-70">/leg</span>}
+        {perSide && <span className="text-sm font-normal opacity-70">/{perSide}</span>}
       </span>
     </>
   );
