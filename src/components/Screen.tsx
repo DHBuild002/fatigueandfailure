@@ -25,7 +25,7 @@ export function Screen({ title, subtitle, onBack, right, action, children }: Pro
         </div>
         {right}
       </header>
-      <main className={`max-w-md mx-auto px-5 pt-2 space-y-6 ${action ? 'pb-[calc(8rem+var(--host-badge-offset))]' : 'pb-10'}`}>{children}</main>
+      <main className={`max-w-md mx-auto px-5 pt-2 space-y-6 ${action ? 'pb-[calc(11rem+var(--host-badge-offset))]' : 'pb-10'}`}>{children}</main>
       {action && (
         <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-zinc-200 pb-[calc(env(safe-area-inset-bottom)+var(--host-badge-offset))]">
           <div className="max-w-md mx-auto px-5 py-3">{action}</div>
@@ -40,7 +40,7 @@ export function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElemen
     <button
       type="button"
       {...props}
-      className={`h-12 w-full rounded-xl bg-emerald-700 text-white font-semibold text-lg active:bg-emerald-800 disabled:bg-zinc-200 disabled:text-zinc-500 ${props.className ?? ''}`}
+      className={`h-12 w-full rounded-xl bg-red-700 text-white font-semibold text-lg active:bg-red-800 disabled:bg-zinc-200 disabled:text-zinc-500 ${props.className ?? ''}`}
     />
   );
 }

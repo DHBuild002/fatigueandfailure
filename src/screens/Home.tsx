@@ -30,7 +30,7 @@ export function Home({ state, week, current, onWeek, onDay, onCardio, onSettings
         week === current ? (
           `${doneCount} of ${DAYS.length} days done`
         ) : (
-          <button type="button" onClick={() => onWeek(current)} className="text-emerald-700 underline underline-offset-2">
+          <button type="button" onClick={() => onWeek(current)} className="text-red-700 underline underline-offset-2">
             Back to this week (week {current})
           </button>
         )
@@ -67,7 +67,7 @@ export function Home({ state, week, current, onWeek, onDay, onCardio, onSettings
               >
                 <span className="flex items-center gap-3">
                   <span
-                    className={`h-11 w-11 shrink-0 rounded-xl grid place-content-center text-center leading-none ${done ? 'bg-emerald-50 text-emerald-700' : 'bg-zinc-100 text-zinc-500'}`}
+                    className={`h-11 w-11 shrink-0 rounded-xl grid place-content-center text-center leading-none ${done ? 'bg-red-50 text-red-700' : 'bg-zinc-100 text-zinc-500'}`}
                   >
                     <span className="block text-[9px] font-medium tracking-widest">DAY</span>
                     <span className="block text-base font-medium tabular-nums">{day}</span>
@@ -76,17 +76,17 @@ export function Home({ state, week, current, onWeek, onDay, onCardio, onSettings
                     <span className="block text-lg font-semibold">
                       Day {day} · {name}
                     </span>
-                    <span className={`block text-sm ${done ? 'text-emerald-700 font-medium' : 'text-zinc-600'}`}>
+                    <span className={`block text-sm ${done ? 'text-red-700 font-medium' : 'text-zinc-600'}`}>
                       {done ? 'Done' : `${exercises.length} exercises`}
                     </span>
                   </span>
-                  {done ? <Check className="text-emerald-700 shrink-0" /> : <ChevronRight className="text-zinc-500 shrink-0" />}
+                  {done ? <Check className="text-red-700 shrink-0" /> : <ChevronRight className="text-zinc-500 shrink-0" />}
                 </span>
                 <span className="block border-t border-zinc-100 pt-3 space-y-1.5">
                   {exercises.map((e) => (
                     <span key={e.id} className="flex items-start gap-2 text-sm text-zinc-700">
                       <span
-                        className={`shrink-0 w-6 text-center rounded-full text-xs font-semibold py-0.5 ${e.role === 'A' ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-100 text-zinc-700'}`}
+                        className={`shrink-0 w-6 text-center rounded-full text-xs font-semibold py-0.5 ${e.role === 'A' ? 'bg-red-100 text-red-800' : 'bg-zinc-100 text-zinc-700'}`}
                       >
                         {e.role}
                       </span>
@@ -117,7 +117,7 @@ export function Home({ state, week, current, onWeek, onDay, onCardio, onSettings
               : 'Not logged yet'}
           </span>
         </span>
-        {cardio && <Check className="text-emerald-700" />}
+        {cardio && <Check className="text-red-700" />}
         <ChevronRight className="text-zinc-500" />
       </button>
     </Screen>

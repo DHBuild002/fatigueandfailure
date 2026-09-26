@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { currentWeek, getState, resetState, setStartDate, setUnit, todayISO, type State, type Unit } from '../store';
+import { currentWeek, getState, resetState, setAutoRest, setStartDate, setUnit, todayISO, type State, type Unit } from '../store';
+import { RestPicker } from '../components/RestTimer';
 import { PrimaryButton, Screen } from '../components/Screen';
 import { TOTAL_WEEKS } from '../routine';
 
@@ -35,7 +36,7 @@ export function Settings({ state, onBack }: Props) {
             type="date"
             value={state.startDate}
             onChange={(e) => e.target.value && setStartDate(e.target.value)}
-            className="h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-emerald-600"
+            className="h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-red-600"
           />
         </label>
       </section>
@@ -52,13 +53,33 @@ export function Settings({ state, onBack }: Props) {
               role="radio"
               aria-checked={state.unit === u}
               onClick={() => setUnit(u)}
-              className={`h-12 flex-1 rounded-xl text-lg ${state.unit === u ? 'bg-emerald-700 text-white font-semibold' : 'bg-zinc-100 text-zinc-700'}`}
+              className={`h-12 flex-1 rounded-xl text-lg ${state.unit === u ? 'bg-red-700 text-white font-semibold' : 'bg-zinc-100 text-zinc-700'}`}
             >
               {u === 'kg' ? 'kg · km' : 'lb · mi'}
             </button>
           ))}
         </div>
         <p className="text-sm text-zinc-600">Weights are stored in kg and converted for display, so switching never loses data.</p>
+      </section>
+
+      <section className={card}>
+        <h2 className="text-lg font-semibold" id="rest-settings-label">
+          Rest timer
+        </h2>
+        <RestPicker value={state.restSeconds} id="rest-settings-label" />
+        <label className="flex items-center justify-between gap-4 min-h-12">
+          <span>
+            <span className="block font-medium">Start automatically</span>
+            <span className="block text-sm text-zinc-600">Begin the rest countdown each time you log a set.</span>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={state.autoRest}
+            onChange={(e) => setAutoRest(e.target.checked)}
+            className="h-7 w-12 shrink-0 appearance-none rounded-full bg-zinc-300 relative cursor-pointer transition-colors checked:bg-red-700 before:absolute before:top-0.5 before:left-0.5 before:h-6 before:w-6 before:rounded-full before:bg-white before:shadow before:transition-transform checked:before:translate-x-5"
+          />
+        </label>
       </section>
 
       <section className={card}>

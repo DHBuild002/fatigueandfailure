@@ -6,6 +6,8 @@ A mobile-first, offline PWA for running the **Failure & Fatigue** routine: one f
 
 - **Workout logging.** Log weight × reps one set at a time, with no fixed set count. Each set saves as soon as you confirm it.
 - **Previous performance and targets.** Each exercise shows its last best set and a target for this session. Same load +1 rep for failure (A) work; +2.5 kg / 5 lb (or the next band) for steady (B) work once every prescribed set was hit; deload weeks hold the load. The weight is pre-filled with the target, last week's sets are listed, and an up arrow marks any set that beats last week's matching set.
+- **Set intensity.** Each set can be rated Easy / Moderate / Hard / Max. The rating shows on the set, in last week's summary, and beside the matching set when you log it the following week.
+- **Rest timer.** A Rest button above Finish day counts down 30, 60 or 90 s (chosen on the day screen or in Settings): a red fill with a radial glow sweeps across the button and reaches the right edge at 0:00, then it beeps. Tap the button again to stop early. Manual by default; Settings can start it automatically after each logged set.
 - **Routine template.** The 5 days are built in. The current week (1–12) comes from the start date, and weeks 4, 8 and 12 are deloads (A exercises hidden).
 - **kg / lb.** Weights are stored in kg and converted for display, with steps of 2.5 kg or 5 lb.
 - **Weekly cardio.** One entry per week: type, minutes and optional distance (km or mi).

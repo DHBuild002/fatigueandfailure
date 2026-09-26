@@ -1,6 +1,7 @@
 import { useRef, useState, type RefObject } from 'react';
 import type { Exercise } from '../routine';
-import { BANDS, beats, formatNumber, fromDisplay, toDisplay, weightStep, type Band, type SetLog, type Unit } from '../store';
+import { BANDS, beats, effortLabel, formatNumber, fromDisplay, toDisplay, weightStep, type Band, type Effort, type SetLog, type Unit } from '../store';
+import { EffortPicker, EffortPill } from './Effort';
 import { Stepper } from './Stepper';
 import { ArrowUp, Check, Close } from './Icons';
 
@@ -9,6 +10,7 @@ interface EditProps {
   exercise: Exercise;
   unit: Unit;
   initial: Partial<SetLog>;
+  prev?: SetLog; // last week's matching set, shown for comparison
   repsRef?: RefObject<HTMLInputElement | null>;
   onSave: (set: SetLog) => void;
   onDiscard: () => void; // cancels a draft or deletes a saved set
@@ -16,10 +18,11 @@ interface EditProps {
 }
 
 // Inline editor for one set: weight (or band) + reps + ✓. No modals.
-export function SetEditor({ index, exercise, unit, initial, repsRef, onSave, onDiscard, discardLabel }: EditProps) {
+export function SetEditor({ index, exercise, unit, initial, prev, repsRef, onSave, onDiscard, discardLabel }: EditProps) {
   const [weightKg, setWeightKg] = useState(initial.weightKg);
   const [band, setBand] = useState<Band | undefined>(initial.band);
   const [reps, setReps] = useState(initial.reps ? String(initial.reps) : '');
+  const [effort, setEffort] = useState<Effort | undefined>(initial.effort);
   const ownRepsRef = useRef<HTMLInputElement>(null);
   const repsInput = repsRef ?? ownRepsRef;
 
@@ -31,7 +34,8 @@ export function SetEditor({ index, exercise, unit, initial, repsRef, onSave, onD
   const submit = () => {
     if (!valid) return;
     const at = initial.at ?? new Date().toISOString();
-    onSave(exercise.load === 'band' ? { band, reps: repsN, at } : { weightKg, reps: repsN, at });
+    const base = exercise.load === 'band' ? { band } : { weightKg };
+    onSave({ ...base, reps: repsN, ...(effort ? { effort } : {}), at });
   };
 
   return (
@@ -42,7 +46,15 @@ export function SetEditor({ index, exercise, unit, initial, repsRef, onSave, onD
         submit();
       }}
     >
-      <div className="text-xs uppercase tracking-wide text-zinc-600">Set {index + 1}</div>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs uppercase tracking-wide text-zinc-600">Set {index + 1}</span>
+        {prev && (
+          <span className="text-xs text-zinc-500 tabular-nums">
+            Last week: {prev.band ?? `${formatNumber(toDisplay(prev.weightKg ?? 0, unit))} ${unit}`} × {prev.reps}
+            {prev.effort && ` · ${effortLabel(prev.effort)}`}
+          </span>
+        )}
+      </div>
       {exercise.load === 'band' ? (
         <div className="flex gap-2" role="radiogroup" aria-label="Band">
           {BANDS.map((b) => (
@@ -55,7 +67,7 @@ export function SetEditor({ index, exercise, unit, initial, repsRef, onSave, onD
                 setBand(b);
                 if (!reps) repsInput.current?.focus(); // straight on to reps, as after "+ Add set"
               }}
-              className={`h-12 flex-1 rounded-xl capitalize ${band === b ? 'bg-white text-white font-semibold' : 'bg-zinc-100 text-zinc-700'}`}
+              className={`h-12 flex-1 rounded-xl capitalize ${band === b ? 'bg-red-700 text-white font-semibold' : 'bg-zinc-100 text-zinc-700'}`}
             >
               {b}
             </button>
@@ -73,6 +85,7 @@ export function SetEditor({ index, exercise, unit, initial, repsRef, onSave, onD
           }}
         />
       )}
+      <EffortPicker value={effort} onChange={setEffort} />
       <div className="flex items-center gap-2">
         <label className="flex-1 flex items-center gap-2 min-w-0">
           <input
@@ -85,14 +98,14 @@ export function SetEditor({ index, exercise, unit, initial, repsRef, onSave, onD
             placeholder="reps"
             value={reps}
             onChange={(e) => setReps(e.target.value.replace(/\D/g, ''))}
-            className="h-12 w-full min-w-0 rounded-xl bg-white border border-zinc-300 text-xl text-center placeholder:text-zinc-400 focus:outline-none focus:border-emerald-600"
+            className="h-12 w-full min-w-0 rounded-xl bg-white border border-zinc-300 text-xl text-center placeholder:text-zinc-400 focus:outline-none focus:border-red-600"
           />
           <span className="text-sm text-zinc-600 shrink-0">{exercise.perSide ? `reps/${exercise.perSide}` : 'reps'}</span>
         </label>
         <button type="button" onClick={onDiscard} aria-label={discardLabel} className="h-12 min-w-12 grid place-items-center rounded-xl bg-zinc-100 text-zinc-700 active:bg-zinc-300">
           <Close />
         </button>
-        <button type="submit" disabled={!valid} aria-label="Save set" className="h-12 min-w-12 grid place-items-center rounded-xl bg-emerald-700 text-white active:bg-emerald-800 disabled:bg-zinc-200 disabled:text-zinc-500">
+        <button type="submit" disabled={!valid} aria-label="Save set" className="h-12 min-w-12 grid place-items-center rounded-xl bg-red-700 text-white active:bg-red-800 disabled:bg-zinc-200 disabled:text-zinc-500">
           <Check />
         </button>
       </div>
@@ -123,8 +136,9 @@ export function SetRow({ index, set, prev, unit, perSide, onEdit }: ViewProps) {
         {load} × {set.reps}
         {perSide && <span className="text-sm text-zinc-600">/{perSide}</span>}
       </span>
+      <EffortPill effort={set.effort} />
       {up && (
-        <span className="flex items-center gap-1 text-emerald-700 text-sm font-medium">
+        <span className="flex items-center gap-1 text-red-700 text-sm font-medium">
           <ArrowUp className="w-5 h-5" />
           <span className="sr-only">Beat last week</span>
         </span>

@@ -19,6 +19,7 @@ import {
   type Unit,
 } from '../store';
 import { SetEditor, SetRow } from './SetRow';
+import { startRest } from '../timer';
 
 interface Props {
   exercise: Exercise;
@@ -61,7 +62,7 @@ export function ExerciseCard({ exercise, week, state }: Props) {
           <p className="text-sm text-zinc-700">{exercise.prescription}</p>
         </div>
         <span
-          className={`rounded-full px-2 text-xs py-0.5 font-medium shrink-0 ${isA ? 'bg-emerald-100 text-emerald-800' : 'bg-zinc-100 text-zinc-700'}`}
+          className={`rounded-full px-2 text-xs py-0.5 font-medium shrink-0 ${isA ? 'bg-red-100 text-red-800' : 'bg-zinc-100 text-zinc-700'}`}
         >
           {isA ? 'A · Failure' : 'B · Steady'}
         </span>
@@ -76,12 +77,12 @@ export function ExerciseCard({ exercise, week, state }: Props) {
             </dd>
             <dd className="text-xs text-zinc-500">Week {prev!.week}</dd>
           </div>
-          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3">
-            <dt className="text-xs font-medium uppercase tracking-wide text-emerald-800">Target</dt>
-            <dd className="text-sm font-medium tabular-nums text-emerald-800">
+          <div className="rounded-xl bg-red-50 border border-red-200 p-3">
+            <dt className="text-xs font-medium uppercase tracking-wide text-red-800">Target</dt>
+            <dd className="text-sm font-medium tabular-nums text-red-800">
               <StatValue set={target} unit={state.unit} perSide={exercise.perSide} />
             </dd>
-            <dd className="text-xs text-emerald-800">{targetNote(exercise, target, week, state.unit)}</dd>
+            <dd className="text-xs text-red-800">{targetNote(exercise, target, week, state.unit)}</dd>
           </div>
         </dl>
       ) : (
@@ -107,6 +108,7 @@ export function ExerciseCard({ exercise, week, state }: Props) {
                   exercise={exercise}
                   unit={state.unit}
                   initial={s}
+                  prev={prev?.sets[i]}
                   onSave={(set) => {
                     updateSet(week, exercise.id, i, set);
                     setEditing(null);
@@ -141,10 +143,12 @@ export function ExerciseCard({ exercise, week, state }: Props) {
           exercise={exercise}
           unit={state.unit}
           initial={draft}
+          prev={prev?.sets[sets.length]}
           repsRef={repsRef}
           onSave={(set) => {
             addSet(week, exercise.id, set);
             setDraft(null);
+            if (state.autoRest) startRest(state.restSeconds);
           }}
           onDiscard={() => setDraft(null)}
           discardLabel="Cancel set"

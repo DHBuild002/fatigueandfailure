@@ -76,7 +76,7 @@ function FirstLaunch() {
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-emerald-600"
+          className="h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-red-600"
         />
       </label>
       <p className="text-sm text-zinc-600">Weights are in kg by default. You can switch to lb in Settings.</p>

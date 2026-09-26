@@ -8,7 +8,7 @@ interface Props {
   onBack: () => void;
 }
 
-const field = 'h-12 w-full min-w-0 rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-emerald-600';
+const field = 'h-12 w-full min-w-0 rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-red-600';
 const numField = `${field} text-xl text-center`;
 
 export function Cardio({ state, week, onBack }: Props) {
