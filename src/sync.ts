@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { Cloud } from './cloudTypes';
 import { mergeStates, resolve } from './merge';
-import { getState, replaceState, subscribe, type State } from './store';
+import { fromSaved, getState, replaceState, subscribe, type State } from './store';
 
 // Keeps the signed-in user's local data and their cloud copy in step. The app stays
 // offline-first: every change is saved locally at once (store.ts) and pushed here after a
@@ -111,7 +111,9 @@ export function createSync(cloud: Cloud, userId: string, opts: SyncOptions = {})
     clearTimeout(retry);
     setStatus({ phase: 'syncing' });
     try {
-      const remote = await cloud.pull(userId);
+      // An older app version may have pushed the v1 day order; migrate before comparing.
+      const pulled = await cloud.pull(userId);
+      const remote = pulled && fromSaved(pulled);
       let local = getState();
       const decision = resolve(local, remote, readSynced(userId));
 

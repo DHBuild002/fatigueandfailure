@@ -183,6 +183,20 @@ describe('createSync', () => {
     sync.stop();
   });
 
+  it('migrates a cloud copy saved in the old day order before merging', async () => {
+    replaceState(doc({ startDate: '2026-09-01', daysDone: { '1:3': true }, logs: { '1:squat': [set('LOCAL')] } }));
+    const cloud = fakeCloud();
+    const old: Partial<State> = doc({ startDate: '2026-09-01', updatedAt: T2, daysDone: { '1:2': true, '1:5': true } });
+    delete old.routineVersion;
+    cloud.rows.set('u1', old as State);
+    const sync = createSync(cloud, 'u1');
+    await sync.start();
+    // Old Legs (2) -> Legs (1), old Back (5) -> Back (4); local Chest (3) is already v2.
+    expect(getState().daysDone).toEqual({ '1:1': true, '1:3': true, '1:4': true });
+    expect(cloud.rows.get('u1')!.routineVersion).toBe(2);
+    sync.stop();
+  });
+
   it('pushes a logged set after the debounce', async () => {
     vi.useFakeTimers();
     const cloud = fakeCloud();

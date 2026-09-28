@@ -38,7 +38,7 @@ export function Cardio({ state, week, onBack }: Props) {
 
   return (
     <Screen
-      title="Weekly cardio"
+      title="Day 5 · Cardio"
       subtitle={`Week ${week}`}
       onBack={onBack}
       action={

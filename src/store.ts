@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { TOTAL_WEEKS, isDeload, type Day, type Exercise } from './routine';
+import { TOTAL_WEEKS, isCardioDay, isDeload, type Day, type Exercise } from './routine';
 
 export type Unit = 'kg' | 'lb';
 export type Band = 'light' | 'medium' | 'heavy';
@@ -38,7 +38,11 @@ export interface State {
   restSeconds: RestSeconds; // rest timer length
   autoRest: boolean; // start the rest timer automatically after each logged set
   updatedAt: string; // ISO time of the last local change ('' = never), used to sync with the cloud
+  routineVersion: number; // day numbering in daysDone (see migrateState)
 }
+
+// 1: Glutes, Legs, Arms, Chest, Back. 2: Legs, Arms, Chest, Back, Cardio.
+export const ROUTINE_VERSION = 2;
 
 export type RestSeconds = 30 | 60 | 90;
 export const REST_OPTIONS: RestSeconds[] = [30, 60, 90];
@@ -55,7 +59,28 @@ export const emptyState = (): State => ({
   restSeconds: 60,
   autoRest: false,
   updatedAt: '',
+  routineVersion: ROUTINE_VERSION,
 });
+
+// Bring saved data up to the current day order. Idempotent.
+// v1 → v2: Glutes (1) and Legs (2) merge into Legs (1); Arms, Chest and Back move from
+// days 3–5 to 2–4. Day 5 is now cardio, whose done state comes from the cardio log.
+export function migrateState(s: State): State {
+  if ((s.routineVersion ?? 1) >= ROUTINE_VERSION) return s;
+  const toV2: Record<string, number> = { '1': 1, '2': 1, '3': 2, '4': 3, '5': 4 };
+  const daysDone: Record<string, boolean> = {};
+  for (const [key, done] of Object.entries(s.daysDone)) {
+    const [week, day] = key.split(':');
+    const next = toV2[day];
+    if (done && next) daysDone[`${week}:${next}`] = true;
+  }
+  return { ...s, daysDone, routineVersion: ROUTINE_VERSION };
+}
+
+// Fill in fields added since the data was saved, then migrate it. Used for both
+// localStorage and cloud copies. No routineVersion means the original (v1) day order.
+export const fromSaved = (saved: Partial<State>): State =>
+  migrateState({ ...emptyState(), routineVersion: 1, ...saved });
 
 // ---------- persistence ----------
 
@@ -68,8 +93,7 @@ export function load(key = storageKey): State {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return emptyState();
-    const parsed = JSON.parse(raw) as Partial<State>;
-    return { ...emptyState(), ...parsed };
+    return fromSaved(JSON.parse(raw) as Partial<State>);
   } catch {
     return emptyState();
   }
@@ -100,7 +124,7 @@ export function setState(update: (s: State) => State) {
 
 // Replace the whole state as-is (keeping its updatedAt), e.g. with a copy pulled from the cloud.
 export function replaceState(next: State) {
-  state = { ...emptyState(), ...next };
+  state = fromSaved(next);
   save(state);
   notify();
 }
@@ -144,6 +168,10 @@ export function useStore(): State {
 
 export const logKey = (week: number, exId: string) => `${week}:${exId}`;
 export const dayKey = (week: number, day: Day) => `${week}:${day}`;
+
+// The cardio day is done once that week's cardio is logged; lifting days when finished.
+export const isDayDone = (s: State, week: number, day: Day) =>
+  isCardioDay(day) ? !!s.cardio[week] : !!s.daysDone[dayKey(week, day)];
 
 // ---------- dates & weeks ----------
 
