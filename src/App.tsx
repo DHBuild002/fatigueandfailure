@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Day } from './routine';
+import { isCardioDay, type Day } from './routine';
 import { currentWeek, setStartDate, todayISO, useStore } from './store';
 import { Home } from './screens/Home';
 import { Session } from './screens/Session';
@@ -34,6 +34,8 @@ export default function App() {
 
   switch (view.name) {
     case 'session':
+      // The cardio day has no lifts; it always uses the cardio log.
+      if (isCardioDay(view.day)) return <Cardio state={state} week={week} onBack={home} />;
       return <Session state={state} week={week} day={view.day} onBack={home} />;
     case 'cardio':
       return <Cardio state={state} week={week} onBack={home} />;
