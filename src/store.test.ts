@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { exercisesFor, isDeload, EXERCISES, type Exercise } from './routine';
+import { exercisesFor, isCardioDay, isDeload, EXERCISES, type Exercise } from './routine';
 import {
   beats,
+  isDayDone,
+  migrateState,
+  ROUTINE_VERSION,
   effortLabel,
   emptyState,
   load,
@@ -43,13 +46,13 @@ describe('deload', () => {
     expect([...Array(12)].map((_, i) => i + 1).filter(isDeload)).toEqual([4, 8, 12]);
   });
   it('hides all A exercises on deload weeks', () => {
-    for (const day of [1, 2, 3, 4, 5] as const) {
+    for (const day of [1, 2, 3, 4] as const) {
       expect(exercisesFor(day, 4).every((e) => e.role === 'B')).toBe(true);
       expect(exercisesFor(day, 5).some((e) => e.role === 'A')).toBe(true);
     }
   });
   it('orders A before B', () => {
-    for (const day of [1, 2, 3, 4, 5] as const) {
+    for (const day of [1, 2, 3, 4] as const) {
       const roles = exercisesFor(day, 1).map((e) => e.role).join('');
       expect(roles).toMatch(/^A+B+$/);
     }
@@ -173,5 +176,48 @@ describe('intensity and rest settings', () => {
     vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null });
     expect(load()).toMatchObject({ startDate: '2026-09-01', unit: 'lb', restSeconds: 60, autoRest: false });
     vi.unstubAllGlobals();
+  });
+});
+
+describe('day order: Legs, Arms, Chest, Back, Cardio', () => {
+  const names = (day: 1 | 2 | 3 | 4 | 5, week = 1) => exercisesFor(day, week).map((e) => e.name);
+  it('puts all four squats on Leg Day, failure lifts first', () => {
+    expect(names(1)).toEqual(['Barbell squat', 'Front squat', 'Tempo barbell squat', 'Tempo goblet squat']);
+    expect(names(1, 4)).toEqual(['Tempo barbell squat', 'Tempo goblet squat']); // deload: B only
+  });
+  it('moves Arms, Chest and Back to days 2–4, and Day 5 has no lifts', () => {
+    expect(names(2)[0]).toBe('Barbell curl');
+    expect(names(3)[0]).toBe('Barbell bench press');
+    expect(names(4)[0]).toBe('Barbell bent-over row');
+    expect(names(5)).toEqual([]);
+    expect(isCardioDay(5)).toBe(true);
+    expect(isCardioDay(1)).toBe(false);
+  });
+});
+
+describe('migrateState (v1 → v2 day order)', () => {
+  const v1 = (daysDone: Record<string, boolean>) => ({ ...emptyState(), routineVersion: 1, daysDone });
+  it('merges Glutes and Legs into Legs, and shifts Arms/Chest/Back down a day', () => {
+    const m = migrateState(v1({ '1:1': true, '1:3': true, '2:2': true, '2:5': true, '3:4': true }));
+    expect(m.daysDone).toEqual({ '1:1': true, '1:2': true, '2:1': true, '2:4': true, '3:3': true });
+    expect(m.routineVersion).toBe(ROUTINE_VERSION);
+  });
+  it('leaves current data alone and is safe to run twice', () => {
+    const current = { ...emptyState(), daysDone: { '1:1': true, '1:4': true } };
+    expect(migrateState(current)).toBe(current);
+    const once = migrateState(v1({ '1:2': true }));
+    expect(migrateState(once)).toBe(once);
+  });
+  it('treats data saved before routineVersion existed as the old order', () => {
+    const store = new Map<string, string>([[STORAGE_KEY, JSON.stringify({ startDate: '2026-09-01', daysDone: { '1:5': true } })]]);
+    vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null });
+    expect(load().daysDone).toEqual({ '1:4': true }); // old Back (5) → new Back (4)
+    vi.unstubAllGlobals();
+  });
+  it('counts the cardio day as done once cardio is logged', () => {
+    const s = { ...emptyState(), cardio: { 2: { type: 'Run', minutes: 30 } } };
+    expect(isDayDone(s, 2, 5)).toBe(true);
+    expect(isDayDone(s, 1, 5)).toBe(false);
+    expect(isDayDone({ ...s, daysDone: { '2:1': true } }, 2, 1)).toBe(true);
   });
 });
