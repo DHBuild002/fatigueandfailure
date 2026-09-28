@@ -36,11 +36,9 @@ To try it on a phone on the same network, run `npm run dev -- --host` and open t
 
 ## Deploying
 
-`.github/workflows/ci-deploy.yml` runs lint, tests and a build on every pull request. On every push to `main`, it also deploys `dist/` to GitHub Pages at `https://<owner>.github.io/fatigueandfailure/`.
+The live site is on **Netlify**. It builds `main` automatically (build command `npm run build`, output directory `dist`) and posts a deploy preview on every pull request.
 
-One-time setup: **Settings → Pages → Build and deployment → Source: GitHub Actions**. Until that's set, the deploy job fails and the build job still runs.
-
-The build uses a relative base path, so `dist/` also works as-is on Vercel or Netlify (build command `npm run build`, output directory `dist`).
+`.github/workflows/ci.yml` runs lint, tests and a build on every pull request and on `main`. It doesn't deploy anything.
 
 ## Project structure
 
