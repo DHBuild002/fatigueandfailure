@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { exercisesFor, isCardioDay, isDeload, EXERCISES, type Exercise } from './routine';
+import { PROGRAM_LIST, PROGRAMS, daysFor, exercisesFor, isCardioDay, isDeload, type Exercise } from './routine';
+
+const EXERCISES = PROGRAMS.overload.exercises;
 import {
   beats,
+  cardioFor,
+  dayKey,
   isDayDone,
   migrateState,
   ROUTINE_VERSION,
@@ -215,9 +219,75 @@ describe('migrateState (v1 → v2 day order)', () => {
     vi.unstubAllGlobals();
   });
   it('counts the cardio day as done once cardio is logged', () => {
-    const s = { ...emptyState(), cardio: { 2: { type: 'Run', minutes: 30 } } };
+    const s = { ...emptyState(), cardio: { '2:5': { type: 'Run', minutes: 30 } } };
     expect(isDayDone(s, 2, 5)).toBe(true);
     expect(isDayDone(s, 1, 5)).toBe(false);
     expect(isDayDone({ ...s, daysDone: { '2:1': true } }, 2, 1)).toBe(true);
+  });
+});
+
+describe('migrateState (v2 → v3 cardio per day)', () => {
+  it("turns each week's cardio entry into Day 5's entry", () => {
+    const v2 = { ...emptyState(), routineVersion: 2, cardio: { 1: { type: 'Run', minutes: 30 }, 3: { type: 'Swim', minutes: 20 } } };
+    const m = migrateState(v2 as never);
+    expect(m.cardio).toEqual({ '1:5': { type: 'Run', minutes: 30 }, '3:5': { type: 'Swim', minutes: 20 } });
+    expect(isDayDone(m, 1, 5)).toBe(true);
+    expect(migrateState(m)).toBe(m);
+  });
+  it('runs every step for v1 data, and defaults the routine to Overload', () => {
+    const store = new Map<string, string>([[STORAGE_KEY, JSON.stringify({ startDate: '2026-09-01', daysDone: { '1:2': true }, cardio: { 1: { type: 'Run', minutes: 30 } } })]]);
+    vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null });
+    const s = load();
+    vi.unstubAllGlobals();
+    expect(s.program).toBe('overload');
+    expect(s.daysDone).toEqual({ '1:1': true });
+    expect(cardioFor(s, 1, 5)).toEqual({ type: 'Run', minutes: 30 });
+  });
+});
+
+describe('routines', () => {
+  it('each has 5 days, and lift days are A lifts then B lifts with unique ids', () => {
+    for (const p of PROGRAM_LIST) {
+      expect(p.days.map((d) => d.day)).toEqual([1, 2, 3, 4, 5]);
+      expect(new Set(p.exercises.map((e) => e.id)).size).toBe(p.exercises.length);
+      for (const d of p.days) {
+        const ex = exercisesFor(d.day, 1, p.id);
+        if (d.kind === 'cardio') expect(ex).toEqual([]);
+        else {
+          expect(ex.map((e) => e.role).join('')).toMatch(/^A+B+$/);
+          expect(exercisesFor(d.day, 4, p.id).every((e) => e.role === 'B')).toBe(true); // deload
+          expect(ex.filter((e) => e.role === 'B').every((e) => e.scheme)).toBe(true);
+        }
+      }
+    }
+  });
+  it('shares one id (and so one history) for an exercise used by several routines', () => {
+    const byId = new Map<string, string>();
+    for (const p of PROGRAM_LIST) for (const e of p.exercises) {
+      const name = byId.get(e.id);
+      if (name) expect(e.name).toBe(name);
+      byId.set(e.id, e.name);
+    }
+  });
+  it('Cardio focus has three cardio days and two full-body days', () => {
+    expect(daysFor('cardio').filter((d) => d.kind === 'cardio').map((d) => d.day)).toEqual([1, 3, 5]);
+    expect(exercisesFor(2, 1, 'cardio').map((e) => e.name)).toEqual(['Goblet squat', 'Dumbbell bench press', 'Seated cable row']);
+    expect(isCardioDay(1, 'cardio')).toBe(true);
+    expect(isCardioDay(1)).toBe(false);
+  });
+  it('Gym volume uses none of the Overload exercises', () => {
+    const overload = new Set(EXERCISES.map((e) => e.id));
+    expect(PROGRAMS.gym.exercises.filter((e) => overload.has(e.id))).toEqual([]);
+  });
+  it('keeps done days and cardio apart per routine', () => {
+    const base = { ...emptyState(), daysDone: { '1:1': true }, cardio: { '1:5': { type: 'Run', minutes: 30 } } };
+    expect(isDayDone(base, 1, 1)).toBe(true);
+    const light = { ...base, program: 'light' as const };
+    expect(isDayDone(light, 1, 1)).toBe(false);
+    expect(isDayDone(light, 1, 5)).toBe(false);
+    expect(dayKey(1, 3, 'cardio')).toBe('cardio:1:3');
+    const cardio = { ...base, program: 'cardio' as const, cardio: { 'cardio:1:3': { type: 'Bike', minutes: 40 } } };
+    expect(isDayDone(cardio, 1, 3)).toBe(true);
+    expect(isDayDone(cardio, 1, 1)).toBe(false);
   });
 });

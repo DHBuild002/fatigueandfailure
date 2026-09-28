@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { distanceFromDisplay, distanceToDisplay, distanceUnit, formatNumber, saveCardio, setState, type State } from '../store';
+import type { Day } from '../routine';
+import { cardioFor, deleteCardio, distanceFromDisplay, distanceToDisplay, distanceUnit, formatNumber, saveCardio, type State } from '../store';
 import { PrimaryButton, Screen } from '../components/Screen';
 
 interface Props {
   state: State;
   week: number;
+  day: Day;
   onBack: () => void;
 }
 
 const field = 'h-12 w-full min-w-0 rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-red-600';
 const numField = `${field} text-xl text-center`;
 
-export function Cardio({ state, week, onBack }: Props) {
-  const existing = state.cardio[week];
+export function Cardio({ state, week, day, onBack }: Props) {
+  const existing = cardioFor(state, week, day);
   const du = distanceUnit(state.unit);
   const [type, setType] = useState(existing?.type ?? 'Run');
   const [minutes, setMinutes] = useState(existing ? String(existing.minutes) : '');
@@ -32,13 +34,13 @@ export function Cardio({ state, week, onBack }: Props) {
       const unchanged = existing?.distanceKm !== undefined && distanceToDisplay(existing.distanceKm, state.unit) === distanceN;
       distanceKm = unchanged ? existing!.distanceKm : distanceFromDisplay(distanceN, state.unit);
     }
-    saveCardio(week, { type: type.trim(), minutes: minutesN, distanceKm });
+    saveCardio(week, day, { type: type.trim(), minutes: minutesN, distanceKm });
     onBack();
   };
 
   return (
     <Screen
-      title="Day 5 · Cardio"
+      title={`Day ${day} · Cardio`}
       subtitle={`Week ${week}`}
       onBack={onBack}
       action={
@@ -74,15 +76,11 @@ export function Cardio({ state, week, onBack }: Props) {
           type="button"
           className="h-12 w-full text-sm text-zinc-600 underline underline-offset-2"
           onClick={() => {
-            setState((s) => {
-              const cardio = { ...s.cardio };
-              delete cardio[week];
-              return { ...s, cardio };
-            });
+            deleteCardio(week, day);
             onBack();
           }}
         >
-          Remove this week's entry
+          Remove this entry
         </button>
       )}
     </Screen>

@@ -193,7 +193,16 @@ describe('createSync', () => {
     await sync.start();
     // Old Legs (2) -> Legs (1), old Back (5) -> Back (4); local Chest (3) is already v2.
     expect(getState().daysDone).toEqual({ '1:1': true, '1:3': true, '1:4': true });
-    expect(cloud.rows.get('u1')!.routineVersion).toBe(2);
+    expect(cloud.rows.get('u1')!.routineVersion).toBe(3);
+    sync.stop();
+  });
+
+  it("syncs each person's routine choice", async () => {
+    const cloud = fakeCloud();
+    cloud.rows.set('u1', doc({ startDate: '2026-09-01', updatedAt: T2, program: 'light' }));
+    const sync = createSync(cloud, 'u1');
+    await sync.start();
+    expect(getState().program).toBe('light');
     sync.stop();
   });
 

@@ -8,9 +8,15 @@ A mobile-first, offline PWA for running the **Failure & Fatigue** routine: one f
 - **Previous performance and targets.** Each exercise shows its last best set and a target for this session. Same load +1 rep for failure (A) work; +2.5 kg / 5 lb (or the next band) for steady (B) work once every prescribed set was hit; deload weeks hold the load. The weight is pre-filled with the target, last week's sets are listed, and an up arrow marks any set that beats last week's matching set.
 - **Set intensity.** Each set can be rated Easy / Moderate / Hard / Max. The rating shows on the set, in last week's summary, and beside the matching set when you log it the following week.
 - **Rest timer.** A Rest button above Finish day counts down 30, 60 or 90 s (chosen on the day screen or in Settings): a red fill with a radial glow sweeps across the button and reaches the right edge at 0:00, then it beeps. Tap the button again to stop early. Manual by default; Settings can start it automatically after each logged set.
-- **Routine template.** The 5 days are built in: Day 1 Legs, Day 2 Arms, Day 3 Chest, Day 4 Back, Day 5 Cardio. The current week (1–12) comes from the start date, and weeks 4, 8 and 12 are deloads (A exercises hidden).
+- **Four built-in routines**, picked on the welcome screen and changeable in Settings. All are 5 days a week:
+  - **Overload:** Legs, Arms, Chest, Back, Cardio. Heavy barbell lifts to failure.
+  - **Cardio focus:** Cardio, Full body A, Cardio, Full body B, Cardio.
+  - **Light volume:** Legs, Arms, Chest, Back, Cardio. One light set to failure, then 4×12–20 work.
+  - **Gym volume:** Legs, Arms, Chest & shoulders, Back, Cardio. Machines and cables, 4 sets.
+
+  An exercise shared between routines keeps one history. The current week (1–12) comes from the start date, and weeks 4, 8 and 12 are deloads (A exercises hidden).
 - **kg / lb.** Weights are stored in kg and converted for display, with steps of 2.5 kg or 5 lb.
-- **Day 5 cardio.** One entry per week, logged from the Day 5 card: type, minutes and optional distance (km or mi).
+- **Cardio days.** One entry per cardio day, logged from its day card: type, minutes and optional distance (km or mi).
 - **Offline and installable.** A service worker precaches the app. Data lives in `localStorage` (under `overload:v1`, or `overload:v1:<user id>` when signed in), and Settings can export it as JSON.
 - **Accounts and sync (optional).** With Supabase configured: invite-only sign-in with an emailed code, and each person's data backed up and synced across their devices. It stays offline-first. Without Supabase keys the app runs local-only, exactly as before. Setup guide: [docs/accounts-setup.md](docs/accounts-setup.md).
 

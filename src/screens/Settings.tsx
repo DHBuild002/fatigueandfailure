@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { currentWeek, getState, resetState, setAutoRest, setStartDate, setUnit, todayISO, type State, type Unit } from '../store';
+import { currentWeek, getState, resetState, setAutoRest, setProgram, setStartDate, setUnit, todayISO, type State, type Unit } from '../store';
 import { RestPicker } from '../components/RestTimer';
 import { PrimaryButton, Screen } from '../components/Screen';
+import { ProgramPicker } from '../components/ProgramPicker';
 import { TOTAL_WEEKS } from '../routine';
 import { isTestMode, signOut, syncNow, useAccount } from '../account';
 import { StatusDot } from '../components/SyncBadge';
@@ -55,6 +56,16 @@ export function Settings({ state, onBack }: Props) {
             className="h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-red-600"
           />
         </label>
+      </section>
+
+      <section className={card}>
+        <h2 className="text-lg font-semibold" id="program-label">
+          Routine
+        </h2>
+        <ProgramPicker value={state.program} onChange={setProgram} labelledBy="program-label" />
+        <p className="text-sm text-zinc-600">
+          Switching keeps everything you've logged. Exercises that appear in both routines keep their history and targets.
+        </p>
       </section>
 
       <section className={card}>
