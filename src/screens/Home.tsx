@@ -1,7 +1,10 @@
 import { DAYS, TOTAL_WEEKS, exercisesFor, isDeload, type Day } from '../routine';
 import { dayKey, distanceToDisplay, distanceUnit, formatNumber, type State } from '../store';
 import { DeloadBadge, Screen } from '../components/Screen';
-import { Check, ChevronLeft, ChevronRight, Gear } from '../components/Icons';
+import { Check, ChevronLeft, ChevronRight, Cloud, Gear } from '../components/Icons';
+import { useAccount } from '../account';
+import { SYNC_LABEL, useSyncStatus } from '../sync';
+import { StatusDot } from '../components/SyncBadge';
 
 interface Props {
   state: State;
@@ -43,6 +46,7 @@ export function Home({ state, week, current, onWeek, onDay, onCardio, onSettings
           <button type="button" className={navBtn} aria-label="Next week" disabled={week >= TOTAL_WEEKS} onClick={() => onWeek(week + 1)}>
             <ChevronRight />
           </button>
+          <SyncButton className={navBtn} onClick={onSettings} />
           <button type="button" className={navBtn} aria-label="Settings" onClick={onSettings}>
             <Gear />
           </button>
@@ -121,5 +125,18 @@ export function Home({ state, week, current, onWeek, onDay, onCardio, onSettings
         <ChevronRight className="text-zinc-500" />
       </button>
     </Screen>
+  );
+}
+
+// Cloud icon with a status dot, only when signed in. Tapping it opens Settings → Account.
+function SyncButton({ className, onClick }: { className: string; onClick: () => void }) {
+  const account = useAccount();
+  const { phase } = useSyncStatus();
+  if (account.status !== 'signed-in') return null;
+  return (
+    <button type="button" className={`relative ${className}`} aria-label={`Account: ${SYNC_LABEL[phase]}`} onClick={onClick}>
+      <Cloud />
+      <StatusDot phase={phase} className="absolute right-2.5 bottom-3" />
+    </button>
   );
 }

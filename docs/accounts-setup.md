@@ -8,6 +8,20 @@ Until you finish these steps, the app keeps working exactly as before (local-onl
 
 ---
 
+## Try it first: test mode (no setup needed)
+
+Pull-request previews on Netlify run the account screens in **test mode**. `netlify.toml` switches this on for previews only, never for the live site. Test mode uses a pretend backend inside the browser: no emails are sent and nothing leaves the phone. The sign-in screen shows the test accounts:
+
+| Email | Code |
+| --- | --- |
+| `test@overload.app` | `123456` |
+| `owner@example.com` | `123456` |
+| `friend@example.com` | `123456` |
+
+Use two of them on the same phone to see that each person's data stays separate. On a computer, `npm run dev:test` runs the same thing locally.
+
+When you add the Supabase keys (step 7), they take priority over test mode, so previews switch to real sign-in automatically.
+
 ## 1. Create the Supabase project
 
 1. Go to [supabase.com](https://supabase.com), sign up, and click **New project**.

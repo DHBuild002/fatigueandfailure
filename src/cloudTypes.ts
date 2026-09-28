@@ -8,6 +8,9 @@ export interface CloudUser {
 }
 
 export interface Cloud {
+  isTest?: boolean; // true only for the in-browser test backend
+  testAccounts?: string[]; // emails that can sign in on the test backend
+  testCode?: string;
   getUser(): Promise<CloudUser | null>;
   onAuthChange(cb: (user: CloudUser | null) => void): () => void;
   sendCode(email: string): Promise<void>;

@@ -20,6 +20,15 @@ const setStatus = (next: Partial<SyncStatus>) => {
   statusListeners.forEach((l) => l());
 };
 export const getSyncStatus = () => status;
+
+// Short wording for the sync state (Home header button label).
+export const SYNC_LABEL: Record<SyncPhase, string> = {
+  synced: 'Synced',
+  syncing: 'Syncing',
+  offline: 'Offline',
+  error: 'Sync problem',
+};
+
 export function useSyncStatus(): SyncStatus {
   return useSyncExternalStore(
     (l) => {

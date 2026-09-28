@@ -77,6 +77,14 @@ export async function verifyCode(email: string, code: string) {
   await enter(user);
 }
 
+// Run a sync straight away (Settings → Sync now).
+export async function syncNow() {
+  await sync?.syncNow();
+}
+
+export const isTestMode = () => cloud?.isTest === true;
+export const testAccounts = () => ({ emails: cloud?.testAccounts ?? [], code: cloud?.testCode ?? '' });
+
 // Try to get the latest changes up before signing out; they stay on this device either way.
 export async function signOut() {
   if (!cloud) return;

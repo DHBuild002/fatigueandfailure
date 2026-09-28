@@ -3,17 +3,19 @@ import type { State } from './store';
 
 export { CloudError, NOT_INVITED, type Cloud, type CloudUser };
 
-// The app's only view of the backend. Real builds use Supabase when both env vars are
-// set; without them `cloud` is null and the app runs local-only, exactly as before.
+// The app's only view of the backend, chosen at build time:
+// 1. Supabase, when both keys are set (always wins, so real keys override test mode)
+// 2. the in-browser test backend, when VITE_FAKE_CLOUD=1 (PR previews, `npm run dev:test`)
+// 3. otherwise null: the app runs local-only, exactly as before.
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const cloud: Cloud | null =
-  import.meta.env.VITE_FAKE_CLOUD === '1'
-    ? (await import('./cloud.fake')).createFakeCloud()
-    : url && anonKey
-      ? await createSupabaseCloud(url, anonKey)
+  url && anonKey
+    ? await createSupabaseCloud(url, anonKey)
+    : import.meta.env.VITE_FAKE_CLOUD === '1'
+      ? (await import('./cloud.fake')).createFakeCloud()
       : null;
 
 async function createSupabaseCloud(url: string, anonKey: string): Promise<Cloud> {
