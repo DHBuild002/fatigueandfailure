@@ -37,6 +37,7 @@ export interface State {
   cardio: Record<number, Cardio>;
   restSeconds: RestSeconds; // rest timer length
   autoRest: boolean; // start the rest timer automatically after each logged set
+  updatedAt: string; // ISO time of the last local change ('' = never), used to sync with the cloud
 }
 
 export type RestSeconds = 30 | 60 | 90;
@@ -53,13 +54,19 @@ export const emptyState = (): State => ({
   cardio: {},
   restSeconds: 60,
   autoRest: false,
+  updatedAt: '',
 });
 
 // ---------- persistence ----------
 
-export function load(): State {
+// Local-only mode uses one key. Signed in, each user gets their own slot so two
+// people sharing a phone never see each other's data.
+export const userStorageKey = (userId: string) => `${STORAGE_KEY}:${userId}`;
+let storageKey = STORAGE_KEY;
+
+export function load(key = storageKey): State {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return emptyState();
     const parsed = JSON.parse(raw) as Partial<State>;
     return { ...emptyState(), ...parsed };
@@ -70,7 +77,7 @@ export function load(): State {
 
 function save(s: State) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+    localStorage.setItem(storageKey, JSON.stringify(s));
   } catch {
     // Storage full or blocked: the in-memory state still works for this session.
   }
@@ -78,22 +85,53 @@ function save(s: State) {
 
 let state: State = load(); // load() falls back to empty state if storage is missing or blocked
 const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((l) => l());
 
 export function getState() {
   return state;
 }
 
+// Every local change is stamped so sync can tell which copy is newer.
 export function setState(update: (s: State) => State) {
-  state = update(state);
+  state = { ...update(state), updatedAt: new Date().toISOString() };
   save(state);
-  listeners.forEach((l) => l());
+  notify();
+}
+
+// Replace the whole state as-is (keeping its updatedAt), e.g. with a copy pulled from the cloud.
+export function replaceState(next: State) {
+  state = { ...emptyState(), ...next };
+  save(state);
+  notify();
 }
 
 export function resetState() {
   setState(() => emptyState());
 }
 
-function subscribe(l: () => void) {
+export const hasData = (s: State) => s.startDate !== '' || Object.keys(s.logs).length > 0;
+
+// Point the store at a user's slot (or back to local-only with null). The first time a
+// user signs in on a device, data logged before accounts existed moves into their slot
+// and the anonymous copy is removed, so it's only ever adopted once.
+export function switchUser(userId: string | null) {
+  storageKey = userId ? userStorageKey(userId) : STORAGE_KEY;
+  if (userId) {
+    try {
+      const anon = localStorage.getItem(STORAGE_KEY);
+      if (anon !== null) {
+        if (localStorage.getItem(storageKey) === null) localStorage.setItem(storageKey, anon);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      // Storage blocked: carry on with whatever load() can read.
+    }
+  }
+  state = load();
+  notify();
+}
+
+export function subscribe(l: () => void) {
   listeners.add(l);
   return () => listeners.delete(l);
 }

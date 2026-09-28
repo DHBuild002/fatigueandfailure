@@ -6,10 +6,34 @@ import { Session } from './screens/Session';
 import { Cardio } from './screens/Cardio';
 import { Settings } from './screens/Settings';
 import { PrimaryButton, Screen } from './components/Screen';
+import { SignIn } from './screens/SignIn';
+import { initAccount, useAccount } from './account';
 
 type View = { name: 'home' } | { name: 'session'; day: Day } | { name: 'cardio' } | { name: 'settings' };
 
 export default function App() {
+  const account = useAccount();
+  useEffect(() => {
+    void initAccount();
+  }, []);
+
+  if (account.status === 'checking' || account.status === 'loading') {
+    return <Loading text={account.status === 'loading' ? 'Loading your training…' : 'Loading…'} />;
+  }
+  if (account.status === 'signed-out') return <SignIn />;
+  // Remount per user so screen state (open day, browsed week) never carries across accounts.
+  return <MainApp key={account.status === 'signed-in' ? account.user.id : 'local'} />;
+}
+
+function Loading({ text }: { text: string }) {
+  return (
+    <div className="min-h-dvh grid place-items-center px-5" role="status">
+      <p className="text-zinc-600">{text}</p>
+    </div>
+  );
+}
+
+function MainApp() {
   const state = useStore();
   const current = currentWeek(state.startDate);
   useForegroundRefresh();

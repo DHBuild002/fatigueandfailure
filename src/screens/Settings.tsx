@@ -3,6 +3,17 @@ import { currentWeek, getState, resetState, setAutoRest, setStartDate, setUnit, 
 import { RestPicker } from '../components/RestTimer';
 import { PrimaryButton, Screen } from '../components/Screen';
 import { TOTAL_WEEKS } from '../routine';
+import { signOut, useAccount } from '../account';
+import { useSyncStatus, type SyncStatus } from '../sync';
+
+const syncText = ({ phase, lastSyncedAt }: SyncStatus) => {
+  if (phase === 'syncing') return 'Syncing…';
+  if (phase === 'offline') return "Offline. Changes are saved on this phone and will sync when you're back online.";
+  if (phase === 'error') return "Couldn't sync just now. Your changes are safe on this phone; retrying shortly.";
+  if (!lastSyncedAt) return 'Synced.';
+  const t = new Date(lastSyncedAt);
+  return `Synced at ${t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+};
 
 interface Props {
   state: State;
@@ -24,8 +35,12 @@ function exportJSON() {
 export function Settings({ state, onBack }: Props) {
   // Inline confirmation: no modals, and window.confirm() is blocked in some embedded browsers.
   const [confirmReset, setConfirmReset] = useState(false);
+  const account = useAccount();
+  const signedIn = account.status === 'signed-in';
   return (
     <Screen title="Settings" onBack={onBack}>
+      {signedIn && <AccountSection email={account.user.email} />}
+
       <section className={card}>
         <label className="block space-y-2">
           <span className="block text-lg font-semibold">Start date</span>
@@ -84,11 +99,19 @@ export function Settings({ state, onBack }: Props) {
 
       <section className={card}>
         <h2 className="text-lg font-semibold">Data</h2>
-        <p className="text-sm text-zinc-600">Everything is stored on this device only. Export a copy to keep a backup.</p>
+        <p className="text-sm text-zinc-600">
+          {signedIn
+            ? 'Your data is saved on this phone and backed up to your account. Export a copy any time.'
+            : 'Everything is stored on this device only. Export a copy to keep a backup.'}
+        </p>
         <PrimaryButton onClick={exportJSON}>Export JSON</PrimaryButton>
         {confirmReset ? (
           <div className="space-y-3 rounded-xl border border-red-300 p-3">
-            <p className="text-sm text-zinc-800">Delete all logged sets, cardio and settings? This can't be undone.</p>
+            <p className="text-sm text-zinc-800">
+              {signedIn
+                ? "Delete all logged sets, cardio and settings, on this phone and in your account? This can't be undone."
+                : "Delete all logged sets, cardio and settings? This can't be undone."}
+            </p>
             <div className="flex gap-2">
               <button type="button" onClick={() => setConfirmReset(false)} className="h-12 flex-1 rounded-xl bg-zinc-100 text-zinc-800 font-medium">
                 Cancel
@@ -111,5 +134,34 @@ export function Settings({ state, onBack }: Props) {
 
       <p className="text-center text-xs text-zinc-500">Overload v{__APP_VERSION__}</p>
     </Screen>
+  );
+}
+
+function AccountSection({ email }: { email: string }) {
+  const status = useSyncStatus();
+  const [busy, setBusy] = useState(false);
+  return (
+    <section className={card} aria-labelledby="account-label">
+      <h2 className="text-lg font-semibold" id="account-label">
+        Account
+      </h2>
+      <p className="text-sm text-zinc-600">
+        Signed in as <span className="font-medium text-zinc-800 break-all">{email}</span>
+      </p>
+      <p role="status" className={`text-sm ${status.phase === 'error' ? 'text-red-800' : 'text-zinc-600'}`}>
+        {syncText(status)}
+      </p>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          await signOut();
+        }}
+        className="h-12 w-full rounded-xl bg-zinc-100 text-zinc-800 font-medium active:bg-zinc-300 disabled:text-zinc-500"
+      >
+        {busy ? 'Signing out…' : 'Sign out'}
+      </button>
+    </section>
   );
 }

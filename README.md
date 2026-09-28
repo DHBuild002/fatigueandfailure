@@ -11,7 +11,8 @@ A mobile-first, offline PWA for running the **Failure & Fatigue** routine: one f
 - **Routine template.** The 5 days are built in. The current week (1–12) comes from the start date, and weeks 4, 8 and 12 are deloads (A exercises hidden).
 - **kg / lb.** Weights are stored in kg and converted for display, with steps of 2.5 kg or 5 lb.
 - **Weekly cardio.** One entry per week: type, minutes and optional distance (km or mi).
-- **Offline and installable.** A service worker precaches the app. Data lives in `localStorage` under `overload:v1`, and Settings can export it as JSON.
+- **Offline and installable.** A service worker precaches the app. Data lives in `localStorage` (under `overload:v1`, or `overload:v1:<user id>` when signed in), and Settings can export it as JSON.
+- **Accounts and sync (optional).** With Supabase configured: invite-only sign-in with an emailed code, and each person's data backed up and synced across their devices. It stays offline-first. Without Supabase keys the app runs local-only, exactly as before. Setup guide: [docs/accounts-setup.md](docs/accounts-setup.md).
 
 ## Getting started
 
@@ -30,11 +31,13 @@ To try it on a phone on the same network, run `npm run dev -- --host` and open t
 | --- | --- |
 | `npm run build` | Typecheck and build to `dist/` (includes the service worker and manifest) |
 | `npm run preview` | Serve the production build at http://localhost:4173. Use this to test offline and install behaviour. |
-| `npm test` | Unit tests for the week, deload, previous-week, "beats" and unit-conversion logic |
+| `npm test` | Unit tests for the week, deload, previous-week, "beats", unit-conversion, merge and sync logic |
 | `npm run lint` | oxlint |
 | `npm run icons` | Regenerate the PWA icons in `public/` (dependency-free Node script) |
 
 ## Deploying
+
+To turn on accounts, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Netlify's environment variables (see [docs/accounts-setup.md](docs/accounts-setup.md)). Without them, the build is local-only.
 
 The live site is on **Netlify**. It builds `main` automatically (build command `npm run build`, output directory `dist`) and posts a deploy preview on every pull request.
 
@@ -45,9 +48,15 @@ The live site is on **Netlify**. It builds `main` automatically (build command `
 ```
 src/
   routine.ts        seed exercises, deload rule
-  store.ts          State, localStorage load/save, useStore hook, selectors
+  store.ts          State, localStorage load/save (per user when signed in), useStore hook, selectors
+  cloud.ts          backend interface; Supabase when configured, otherwise null (local-only)
+  sync.ts, merge.ts offline-first sync with the cloud copy, and the merge rules
+  account.ts        session state: sign in / out, switching the store to the user's data
   App.tsx           view switch (no router) + first-launch prompt
-  screens/          Home, Session, Cardio, Settings
+  screens/          Home, Session, Cardio, Settings, SignIn
+supabase/
+  migrations/       database tables, per-user access rules, invite-only trigger
+  tests/            security.sh: checks those rules against plain PostgreSQL
   components/       ExerciseCard, SetRow (SetEditor + SetRow), Stepper, Screen, Icons
 scripts/gen-icons.mjs
 ```
