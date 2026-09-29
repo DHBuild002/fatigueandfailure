@@ -85,6 +85,20 @@ export async function syncNow() {
 export const isTestMode = () => cloud?.isTest === true;
 export const testAccounts = () => ({ emails: cloud?.testAccounts ?? [], code: cloud?.testCode ?? '' });
 
+// Test mode only: wipe the pretend backend and every account's data on this device, then
+// reload, so the preview starts again from the sign-in screen with empty test accounts.
+export function resetTestMode() {
+  if (!isTestMode()) return;
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('fakecloud:') || key.startsWith('overload:')) localStorage.removeItem(key);
+    }
+  } catch {
+    // Storage blocked: nothing saved to clear.
+  }
+  location.reload();
+}
+
 // Try to get the latest changes up before signing out; they stay on this device either way.
 export async function signOut() {
   if (!cloud) return;

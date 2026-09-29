@@ -5,6 +5,7 @@ import { Check, ChevronLeft, ChevronRight, Cloud, Gear } from '../components/Ico
 import { useAccount } from '../account';
 import { SYNC_LABEL, useSyncStatus } from '../sync';
 import { StatusDot } from '../components/SyncBadge';
+import { TestModeBar } from '../components/TestModeBar';
 
 interface Props {
   state: State;
@@ -58,6 +59,7 @@ export function Home({ state, week, current, onWeek, onDay, onSettings }: Props)
         </div>
       }
     >
+      <SignedInTestBar />
       {isDeload(week) && (
         <p className="text-sm text-zinc-600">Deload week: only the B (steady) exercises are shown.</p>
       )}
@@ -113,6 +115,11 @@ export function Home({ state, week, current, onWeek, onDay, onSettings }: Props)
 
     </Screen>
   );
+}
+
+function SignedInTestBar() {
+  const account = useAccount();
+  return account.status === 'signed-in' ? <TestModeBar email={account.user.email} /> : null;
 }
 
 // Cloud icon with a status dot, only when signed in. Tapping it opens Settings → Account.

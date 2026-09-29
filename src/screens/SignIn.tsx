@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { isTestMode, sendCode, testAccounts, verifyCode } from '../account';
+import { isTestMode, resetTestMode, sendCode, testAccounts, verifyCode } from '../account';
 import { CloudError } from '../cloudTypes';
 import { PrimaryButton } from '../components/Screen';
 import { Lock, Mail } from '../components/Icons';
@@ -240,6 +240,7 @@ function CodeBoxes({ value, focus }: { value: string; focus: () => void }) {
 
 function TestModePanel({ step, onPick }: { step: 'email' | 'code'; onPick: (email: string) => void }) {
   const { emails, code } = testAccounts();
+  const [confirmReset, setConfirmReset] = useState(false);
   return (
     <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 space-y-3" aria-labelledby="test-mode-label">
       <div className="flex items-center gap-2">
@@ -265,6 +266,23 @@ function TestModePanel({ step, onPick }: { step: 'email' | 'code'; onPick: (emai
             </button>
           ))}
         </div>
+      )}
+      {confirmReset ? (
+        <div className="space-y-2 border-t border-amber-200 pt-3">
+          <p className="text-sm text-amber-900">Delete every test account's data on this device and start again?</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setConfirmReset(false)} className="h-11 flex-1 rounded-lg bg-white border border-amber-300 text-sm font-medium text-amber-950">
+              Cancel
+            </button>
+            <button type="button" onClick={resetTestMode} className="h-11 flex-1 rounded-lg bg-amber-900 text-sm font-semibold text-white">
+              Reset test mode
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setConfirmReset(true)} className="h-11 text-sm text-amber-900 underline underline-offset-2">
+          Reset test mode
+        </button>
       )}
     </section>
   );
