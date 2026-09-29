@@ -272,12 +272,16 @@ export interface Target {
   band?: Band;
   reps: number;
   progressed: boolean; // load goes up from last time
+  reason?: 'easy' | 'moderate'; // the load jumped because last time's sets were rated easy/moderate
 }
 
-// Next-attempt target, from the best set last time (double progression):
-// - A (failure): same load, one more rep than the best set.
+// Next-attempt target, from the best set last time (double progression), pushed harder
+// when the sets were rated as easy:
+// - A (failure): same load, one more rep than the best set. If that set was rated Easy,
+//   add two increments at the same reps; Moderate, one increment.
 // - B (steady): if every prescribed set hit the prescribed reps at that load, add one
-//   increment (2.5 kg / 5 lb, or the next band); otherwise repeat the load for the prescribed reps.
+//   increment (2.5 kg / 5 lb, or the next band), or two if every one of those sets was
+//   rated Easy; otherwise repeat the load for the prescribed reps.
 // - Deload weeks hold the load.
 export function nextTarget(ex: Exercise, prev: Previous | null, week: number, unit: Unit): Target | null {
   if (!prev) return null;
@@ -285,22 +289,39 @@ export function nextTarget(ex: Exercise, prev: Previous | null, week: number, un
   if (!best) return null;
   const same = { weightKg: best.weightKg, band: best.band };
 
-  if (ex.role === 'A' || !ex.scheme) return { ...same, reps: best.reps + 1, progressed: false };
+  if (ex.role === 'A' || !ex.scheme) {
+    const steps = best.effort === 1 ? 2 : best.effort === 2 ? 1 : 0;
+    if (steps === 0 || isDeload(week)) return { ...same, reps: best.reps + 1, progressed: false };
+    const heavier = increase(ex, best, steps, unit);
+    const reason = best.effort === 1 ? 'easy' : 'moderate';
+    return heavier ? { ...heavier, reps: best.reps, progressed: true, reason } : { ...same, reps: best.reps + 1, progressed: false };
+  }
 
   const { sets, reps } = ex.scheme;
   if (isDeload(week)) return { ...same, reps, progressed: false };
 
   const sameLoad = (s: SetLog) =>
     s.band ? s.band === best.band : toDisplay(s.weightKg ?? 0, unit) === toDisplay(best.weightKg ?? 0, unit);
-  const hit = prev.sets.filter((s) => sameLoad(s) && s.reps >= reps).length >= sets;
-  if (!hit) return { ...same, reps, progressed: false };
+  const qualifying = prev.sets.filter((s) => sameLoad(s) && s.reps >= reps);
+  if (qualifying.length < sets) return { ...same, reps, progressed: false };
 
+  // Every set rated Easy earns a double step (when there's room for one, e.g. bands).
+  const double = qualifying.every((s) => s.effort === 1) ? increase(ex, best, 2, unit) : undefined;
+  if (double) return { ...double, reps, progressed: true, reason: 'easy' };
+  const single = increase(ex, best, 1, unit);
+  if (!single) return { ...same, reps: best.reps + 1, progressed: false }; // already on the heaviest band
+  return { ...single, reps, progressed: true };
+}
+
+// The load `steps` increments above a set: 2.5 kg / 5 lb each, or the next band(s).
+// Undefined when there is no heavier band.
+function increase(ex: Exercise, set: SetLog, steps: number, unit: Unit): Pick<SetLog, 'weightKg' | 'band'> | undefined {
   if (ex.load === 'band') {
-    const next = BANDS[bandRank(best.band) + 1];
-    return next ? { band: next, reps, progressed: true } : { ...same, reps: best.reps + 1, progressed: false };
+    const next = BANDS[bandRank(set.band) + steps];
+    return next ? { band: next } : undefined;
   }
-  const up = toDisplay(best.weightKg ?? 0, unit) + weightStep(unit);
-  return { weightKg: fromDisplay(up, unit), reps, progressed: true };
+  const up = toDisplay(set.weightKg ?? 0, unit) + steps * weightStep(unit);
+  return { weightKg: fromDisplay(up, unit) };
 }
 
 // ---------- units ----------

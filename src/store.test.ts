@@ -161,7 +161,42 @@ describe('nextTarget', () => {
     expect(nextTarget(bandEx, prev(1, [b('medium', 15), b('medium', 15), b('medium', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reps: 15 });
     expect(nextTarget(bandEx, prev(1, [b('heavy', 15), b('heavy', 16), b('heavy', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reps: 17 });
   });
-  it('holds the load on deload weeks', () => {
+  const rated = (weightKg: number, reps: number, effort: 1 | 2 | 3 | 4): SetLog => ({ weightKg, reps, effort, at });
+  it('A: an Easy best set means go heavier (+2 steps) at the same reps', () => {
+    const t = nextTarget(ex('bench-press'), prev(1, [rated(60, 10, 1), rated(60, 8, 3)]), 2, 'kg');
+    expect(t).toMatchObject({ weightKg: 65, reps: 10, progressed: true, reason: 'easy' });
+  });
+  it('A: a Moderate best set adds one step', () => {
+    const t = nextTarget(ex('bench-press'), prev(1, [rated(60, 10, 2)]), 2, 'kg');
+    expect(t).toMatchObject({ weightKg: 62.5, reps: 10, progressed: true, reason: 'moderate' });
+  });
+  it('A: Hard, Max or unrated keeps the load and adds a rep', () => {
+    for (const set of [rated(60, 10, 3), rated(60, 10, 4), w(60, 10)]) {
+      expect(nextTarget(ex('bench-press'), prev(1, [set]), 2, 'kg')).toMatchObject({ weightKg: 60, reps: 11, progressed: false });
+    }
+  });
+  it('A: steps 10 lb for an Easy set in lb mode', () => {
+    const t = nextTarget(ex('bench-press'), prev(1, [rated(fromDisplay(135, 'lb'), 8, 1)]), 2, 'lb');
+    expect(toDisplay(t!.weightKg!, 'lb')).toBe(145);
+  });
+  it('B: every qualifying set Easy doubles the step; any harder set keeps one step', () => {
+    const easy = nextTarget(ex('db-overhead-press'), prev(1, [rated(50, 12, 1), rated(50, 12, 1), rated(50, 12, 1)]), 2, 'kg');
+    expect(easy).toMatchObject({ weightKg: 55, reps: 12, progressed: true, reason: 'easy' });
+    const mixed = nextTarget(ex('db-overhead-press'), prev(1, [rated(50, 12, 1), rated(50, 12, 3), rated(50, 12, 1)]), 2, 'kg');
+    expect(mixed!.weightKg).toBeCloseTo(52.5);
+    expect(mixed!.reason).toBeUndefined();
+    const short = nextTarget(ex('db-overhead-press'), prev(1, [rated(50, 12, 1), rated(50, 12, 1), rated(50, 9, 1)]), 2, 'kg');
+    expect(short).toMatchObject({ weightKg: 50, progressed: false });
+  });
+  it('B band: an all-Easy week skips a band when there is one', () => {
+    const b = (band: 'light' | 'medium', reps: number): SetLog => ({ band, reps, effort: 1, at });
+    expect(nextTarget(bandEx, prev(1, [b('light', 15), b('light', 15), b('light', 15)]), 2, 'kg')).toMatchObject({ band: 'heavy', reason: 'easy' });
+    const t = nextTarget(bandEx, prev(1, [b('medium', 15), b('medium', 15), b('medium', 15)]), 2, 'kg');
+    expect(t).toMatchObject({ band: 'heavy', progressed: true });
+    expect(t!.reason).toBeUndefined();
+  });
+  it('holds the load on deload weeks, even after easy sets', () => {
+    expect(nextTarget(ex('db-overhead-press'), prev(3, [rated(50, 12, 1), rated(50, 12, 1), rated(50, 12, 1)]), 4, 'kg')).toMatchObject({ weightKg: 50, progressed: false });
     const t = nextTarget(ex('db-overhead-press'), prev(3, [w(50, 12), w(50, 12), w(50, 12)]), 4, 'kg');
     expect(t).toMatchObject({ weightKg: 50, reps: 12, progressed: false });
   });

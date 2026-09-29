@@ -9,9 +9,10 @@ interface Props {
   week: number;
   day: Day;
   onBack: () => void;
+  onProgress: (exerciseId: string) => void;
 }
 
-export function Session({ state, week, day, onBack }: Props) {
+export function Session({ state, week, day, onBack, onProgress }: Props) {
   const done = isDayDone(state, week, day);
   const exercises = exercisesFor(day, week, state.program);
 
@@ -57,7 +58,7 @@ export function Session({ state, week, day, onBack }: Props) {
       </section>
 
       {exercises.map((e) => (
-        <ExerciseCard key={e.id} exercise={e} week={week} state={state} />
+        <ExerciseCard key={e.id} exercise={e} week={week} state={state} onProgress={() => onProgress(e.id)} />
       ))}
 
       {done && (
