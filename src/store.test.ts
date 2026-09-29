@@ -1,3 +1,4 @@
+import { parseBackup } from './backup';
 import { describe, expect, it, vi } from 'vitest';
 import { PROGRAM_LIST, PROGRAMS, daysFor, exercisesFor, isCardioDay, isDeload, type Exercise } from './routine';
 
@@ -289,5 +290,41 @@ describe('routines', () => {
     const cardio = { ...base, program: 'cardio' as const, cardio: { 'cardio:1:3': { type: 'Bike', minutes: 40 } } };
     expect(isDayDone(cardio, 1, 3)).toBe(true);
     expect(isDayDone(cardio, 1, 1)).toBe(false);
+  });
+});
+
+describe('parseBackup', () => {
+  const backup = (over: Record<string, unknown> = {}) =>
+    JSON.stringify({ ...emptyState(), startDate: '2026-09-01', logs: { '1:bench-press': [w(60, 10), w(60, 8)] }, ...over });
+  it('reads an exported file back in', () => {
+    const r = parseBackup(backup({ unit: 'lb', cardio: { '1': { type: 'Run', minutes: 30 } } }));
+    expect(r.ok && r.sets).toBe(2);
+    expect(r.ok && r.state.unit).toBe('lb');
+    expect(r.ok && r.state.startDate).toBe('2026-09-01');
+  });
+  it('migrates a backup made before the new day order', () => {
+    const r = parseBackup(backup({ routineVersion: undefined, daysDone: { '1:2': true, '1:5': true } }));
+    expect(r.ok && r.state.daysDone).toEqual({ '1:1': true, '1:4': true });
+    expect(r.ok && r.state.routineVersion).toBe(ROUTINE_VERSION);
+  });
+  it('rejects anything that is not an Overload backup', () => {
+    expect(parseBackup('not json').ok).toBe(false);
+    expect(parseBackup('[]').ok).toBe(false);
+    expect(parseBackup(JSON.stringify({ hello: 'world' })).ok).toBe(false);
+    expect(parseBackup(backup({ logs: { '1:x': [{ reps: 'ten' }] } })).ok).toBe(false);
+    expect(parseBackup(backup({ unit: 'stone' })).ok).toBe(false);
+  });
+});
+
+describe('parseBackup with routines', () => {
+  it('keeps the routine and per-day cardio, and moves an old weekly cardio entry to Day 5', () => {
+    const r = parseBackup(JSON.stringify({ startDate: '2026-09-01', logs: {}, program: 'cardio', routineVersion: 3, cardio: { 'cardio:1:3': { type: 'Bike', minutes: 40 } } }));
+    expect(r.ok && r.state.program).toBe('cardio');
+    expect(r.ok && isDayDone(r.state, 1, 3)).toBe(true);
+    const old = parseBackup(JSON.stringify({ startDate: '2026-09-01', logs: {}, routineVersion: 2, cardio: { '2': { type: 'Run', minutes: 30 } } }));
+    expect(old.ok && old.state.cardio).toEqual({ '2:5': { type: 'Run', minutes: 30 } });
+  });
+  it('rejects an unknown routine', () => {
+    expect(parseBackup(JSON.stringify({ startDate: '2026-09-01', logs: {}, program: 'yoga' })).ok).toBe(false);
   });
 });

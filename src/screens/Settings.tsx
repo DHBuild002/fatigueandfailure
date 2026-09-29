@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { currentWeek, getState, resetState, setAutoRest, setProgram, setStartDate, setUnit, todayISO, type State, type Unit } from '../store';
+import { useRef, useState } from 'react';
+import { currentWeek, getState, resetState, setAutoRest, setProgram, setStartDate, setState, setUnit, todayISO, type State, type Unit } from '../store';
+import { parseBackup, type ParsedBackup } from '../backup';
 import { RestPicker } from '../components/RestTimer';
 import { PrimaryButton, Screen } from '../components/Screen';
 import { ProgramPicker } from '../components/ProgramPicker';
@@ -113,10 +114,11 @@ export function Settings({ state, onBack }: Props) {
         <h2 className="text-lg font-semibold">Data</h2>
         <p className="text-sm text-zinc-600">
           {signedIn
-            ? 'Your data is saved on this phone and backed up to your account. Export a copy any time.'
-            : 'Everything is stored on this device only. Export a copy to keep a backup.'}
+            ? 'Your data is saved on this phone and backed up to your account. Export a copy any time, or import one to restore it.'
+            : 'Everything is stored on this device only. Export a copy to keep a backup, or import one to restore it (for example after reinstalling the app).'}
         </p>
         <PrimaryButton onClick={exportJSON}>Export JSON</PrimaryButton>
+        <ImportBackup />
         {confirmReset ? (
           <div className="space-y-3 rounded-xl border border-red-300 p-3">
             <p className="text-sm text-zinc-800">
@@ -202,4 +204,71 @@ function AccountSection({ email }: { email: string }) {
       </div>
     </section>
   );
+}
+
+function ImportBackup() {
+  const input = useRef<HTMLInputElement>(null);
+  const [backup, setBackup] = useState<ParsedBackup | null>(null);
+  const [imported, setImported] = useState(false);
+
+  const choose = async (file: File | undefined) => {
+    if (!file) return;
+    setImported(false);
+    setBackup(parseBackup(await file.text()));
+    if (input.current) input.current.value = ''; // so choosing the same file again still fires
+  };
+
+  return (
+    <>
+      <input ref={input} type="file" accept="application/json,.json" hidden aria-label="Backup file" onChange={(e) => void choose(e.target.files?.[0])} />
+      {backup?.ok ? (
+        <div className="space-y-3 rounded-xl border border-red-300 p-3" role="alertdialog" aria-label="Confirm import">
+          <p className="text-sm text-zinc-800">
+            Replace everything on this phone with this backup? It has {backup.sets} logged {backup.sets === 1 ? 'set' : 'sets'}
+            {backup.state.startDate && `, starting ${formatDate(backup.state.startDate)}`}.
+          </p>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setBackup(null)} className="h-12 flex-1 rounded-xl bg-zinc-100 text-zinc-800 font-medium">
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setState(() => backup.state);
+                setBackup(null);
+                setImported(true);
+              }}
+              className="h-12 flex-1 rounded-xl bg-red-700 text-white font-semibold"
+            >
+              Import
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => input.current?.click()}
+          className="h-12 w-full rounded-xl border border-zinc-300 text-zinc-800 font-medium active:bg-zinc-100"
+        >
+          Import JSON
+        </button>
+      )}
+      {backup && !backup.ok && (
+        <p className="text-sm text-red-700" role="alert">
+          {backup.error}
+        </p>
+      )}
+      {imported && (
+        <p className="text-sm text-zinc-700" role="status">
+          Backup imported.
+        </p>
+      )}
+    </>
+  );
+}
+
+function formatDate(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  return Number.isNaN(date.getTime()) ? iso : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
