@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0
+
+- Invite-only accounts: sign in with an emailed code, each person's data private to them.
+- Offline-first cloud sync across devices: changes upload shortly after they're made, and the latest copy loads when the app opens. On first sign-in, data already on the phone is merged into the account, not replaced.
+- Four routines to pick from on the welcome screen or in Settings: Overload, Cardio focus, Light volume and Gym volume. An exercise shared between routines keeps one history.
+- Cardio is logged per cardio day, so routines can have several. Existing weekly entries move to Day 5.
+
 ## 1.1.0
 
 - Red-on-white theme, lighter number styling and tighter corners.
