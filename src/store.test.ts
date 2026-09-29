@@ -1,3 +1,4 @@
+import { parseBackup } from './backup';
 import { describe, expect, it, vi } from 'vitest';
 import { exercisesFor, isCardioDay, isDeload, EXERCISES, type Exercise } from './routine';
 import {
@@ -219,5 +220,28 @@ describe('migrateState (v1 → v2 day order)', () => {
     expect(isDayDone(s, 2, 5)).toBe(true);
     expect(isDayDone(s, 1, 5)).toBe(false);
     expect(isDayDone({ ...s, daysDone: { '2:1': true } }, 2, 1)).toBe(true);
+  });
+});
+
+describe('parseBackup', () => {
+  const backup = (over: Record<string, unknown> = {}) =>
+    JSON.stringify({ ...emptyState(), startDate: '2026-09-01', logs: { '1:bench-press': [w(60, 10), w(60, 8)] }, ...over });
+  it('reads an exported file back in', () => {
+    const r = parseBackup(backup({ unit: 'lb', cardio: { '1': { type: 'Run', minutes: 30 } } }));
+    expect(r.ok && r.sets).toBe(2);
+    expect(r.ok && r.state.unit).toBe('lb');
+    expect(r.ok && r.state.startDate).toBe('2026-09-01');
+  });
+  it('migrates a backup made before the new day order', () => {
+    const r = parseBackup(backup({ routineVersion: undefined, daysDone: { '1:2': true, '1:5': true } }));
+    expect(r.ok && r.state.daysDone).toEqual({ '1:1': true, '1:4': true });
+    expect(r.ok && r.state.routineVersion).toBe(ROUTINE_VERSION);
+  });
+  it('rejects anything that is not an Overload backup', () => {
+    expect(parseBackup('not json').ok).toBe(false);
+    expect(parseBackup('[]').ok).toBe(false);
+    expect(parseBackup(JSON.stringify({ hello: 'world' })).ok).toBe(false);
+    expect(parseBackup(backup({ logs: { '1:x': [{ reps: 'ten' }] } })).ok).toBe(false);
+    expect(parseBackup(backup({ unit: 'stone' })).ok).toBe(false);
   });
 });
