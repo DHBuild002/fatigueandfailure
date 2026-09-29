@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+- Settings → Data → Import JSON restores a backup made with Export JSON, for example after reinstalling the app. It shows what's in the file and asks before replacing anything. Backups from older versions are updated to the current day order.
+
 ## 1.1.0
 
 - Red-on-white theme, lighter number styling and tighter corners.
