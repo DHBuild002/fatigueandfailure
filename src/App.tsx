@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
-import { isCardioDay, type Day } from './routine';
+import { EXERCISES, isCardioDay, type Day } from './routine';
 import { currentWeek, setStartDate, todayISO, useStore } from './store';
 import { Home } from './screens/Home';
 import { Session } from './screens/Session';
 import { Cardio } from './screens/Cardio';
 import { Settings } from './screens/Settings';
+import { Progress } from './screens/Progress';
 import { PrimaryButton, Screen } from './components/Screen';
 
-type View = { name: 'home' } | { name: 'session'; day: Day } | { name: 'cardio' } | { name: 'settings' };
+type View =
+  | { name: 'home' }
+  | { name: 'session'; day: Day; scrollY?: number } // scrollY: where to return to after Progress
+  | { name: 'progress'; day: Day; exerciseId: string; scrollY: number }
+  | { name: 'cardio' }
+  | { name: 'settings' };
 
 export default function App() {
   const state = useStore();
@@ -25,7 +31,7 @@ export default function App() {
   // Block body: an effect must return nothing or a cleanup function. Some embedded
   // browsers make scrollTo return a value, which React would then call as a cleanup.
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo(0, view.name === 'session' ? (view.scrollY ?? 0) : 0);
   }, [view]);
 
   if (!state.startDate) return <FirstLaunch />;
@@ -36,7 +42,20 @@ export default function App() {
     case 'session':
       // The cardio day has no lifts; it always uses the cardio log.
       if (isCardioDay(view.day)) return <Cardio state={state} week={week} onBack={home} />;
-      return <Session state={state} week={week} day={view.day} onBack={home} />;
+      return (
+        <Session
+          state={state}
+          week={week}
+          day={view.day}
+          onBack={home}
+          onProgress={(exerciseId) => setView({ name: 'progress', day: view.day, exerciseId, scrollY: window.scrollY })}
+        />
+      );
+    case 'progress': {
+      const exercise = EXERCISES.find((e) => e.id === view.exerciseId);
+      const back = () => setView({ name: 'session', day: view.day, scrollY: view.scrollY });
+      return exercise ? <Progress state={state} exercise={exercise} onBack={back} /> : null;
+    }
     case 'cardio':
       return <Cardio state={state} week={week} onBack={home} />;
     case 'settings':

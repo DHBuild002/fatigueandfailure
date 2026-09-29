@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Targets use your set ratings. A failure set rated Easy means go heavier next week (+5 kg / +10 lb at the same reps); Moderate adds one step. Steady lifts where every set was Easy jump two steps instead of one.
+- New Progress view for each weighted exercise: estimated max week by week, your best set, change since week 1, and a projection of where you could be by week 12, shown as a working set (e.g. "≈ 120 kg × 8"). The projection is capped at 1.5% a week so it stays realistic.
+
 ## 1.2.0
 
 - Settings → Data → Import JSON restores a backup made with Export JSON, for example after reinstalling the app. It shows what's in the file and asks before replacing anything. Backups from older versions are updated to the current day order.

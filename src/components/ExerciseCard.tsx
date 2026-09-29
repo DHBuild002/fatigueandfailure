@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { isDeload, type Exercise } from '../routine';
+import { TOTAL_WEEKS, isDeload, type Exercise } from '../routine';
 import {
   addSet,
   bestSet,
@@ -25,9 +25,10 @@ interface Props {
   exercise: Exercise;
   week: number;
   state: State;
+  onProgress?: () => void;
 }
 
-export function ExerciseCard({ exercise, week, state }: Props) {
+export function ExerciseCard({ exercise, week, state, onProgress }: Props) {
   const sets = state.logs[logKey(week, exercise.id)] ?? [];
   const prev = previous(state.logs, week, exercise.id);
   const best = prev && bestSet(prev.sets, state.unit);
@@ -162,13 +163,22 @@ export function ExerciseCard({ exercise, week, state }: Props) {
           + Add set
         </button>
       )}
+
+      {onProgress && exercise.load === 'weight' && (
+        <button type="button" onClick={onProgress} className="h-12 w-full text-sm font-medium text-red-700 underline underline-offset-2">
+          Progress and week {TOTAL_WEEKS} projection
+        </button>
+      )}
     </section>
   );
 }
 
 function targetNote(ex: Exercise, t: Target, week: number, unit: Unit): string {
   if (isDeload(week)) return 'Deload: hold the load';
+  if (t.reason === 'easy' && (ex.role === 'A' || !ex.scheme)) return 'Felt easy: go heavier';
+  if (t.reason === 'moderate') return 'Felt moderate: add weight';
   if (ex.role === 'A' || !ex.scheme) return 'Same load, one more rep';
+  if (t.reason === 'easy') return ex.load === 'band' ? 'Every set felt easy: bigger jump' : `Every set felt easy: +${2 * weightStep(unit)} ${unit}`;
   if (t.progressed) return ex.load === 'band' ? 'Every set hit: next band' : `Every set hit: +${weightStep(unit)} ${unit}`;
   if (t.reps > ex.scheme.reps) return 'Heaviest band: one more rep';
   return `Hit ${ex.scheme.sets}×${ex.scheme.reps}, then go up`;
