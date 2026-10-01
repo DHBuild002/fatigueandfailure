@@ -1,9 +1,22 @@
 import { useRef, useState } from 'react';
-import { currentWeek, getState, resetState, setAutoRest, setStartDate, setState, setUnit, todayISO, type State, type Unit } from '../store';
+import { currentWeek, getState, resetState, setAutoRest, setProgram, setStartDate, setState, setUnit, todayISO, type State, type Unit } from '../store';
 import { parseBackup, type ParsedBackup } from '../backup';
 import { RestPicker } from '../components/RestTimer';
 import { PrimaryButton, Screen } from '../components/Screen';
+import { ProgramPicker } from '../components/ProgramPicker';
 import { TOTAL_WEEKS } from '../routine';
+import { isTestMode, signOut, syncNow, useAccount } from '../account';
+import { StatusDot } from '../components/SyncBadge';
+import { useSyncStatus, type SyncStatus } from '../sync';
+
+const syncText = ({ phase, lastSyncedAt }: SyncStatus) => {
+  if (phase === 'syncing') return 'Syncing…';
+  if (phase === 'offline') return "Offline. Changes are saved on this phone and will sync when you're back online.";
+  if (phase === 'error') return "Couldn't sync just now. Your changes are safe on this phone; retrying shortly.";
+  if (!lastSyncedAt) return 'Synced.';
+  const t = new Date(lastSyncedAt);
+  return `Synced at ${t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+};
 
 interface Props {
   state: State;
@@ -25,8 +38,12 @@ function exportJSON() {
 export function Settings({ state, onBack }: Props) {
   // Inline confirmation: no modals, and window.confirm() is blocked in some embedded browsers.
   const [confirmReset, setConfirmReset] = useState(false);
+  const account = useAccount();
+  const signedIn = account.status === 'signed-in';
   return (
     <Screen title="Settings" onBack={onBack}>
+      {signedIn && <AccountSection email={account.user.email} />}
+
       <section className={card}>
         <label className="block space-y-2">
           <span className="block text-lg font-semibold">Start date</span>
@@ -40,6 +57,16 @@ export function Settings({ state, onBack }: Props) {
             className="h-12 w-full rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-red-600"
           />
         </label>
+      </section>
+
+      <section className={card}>
+        <h2 className="text-lg font-semibold" id="program-label">
+          Routine
+        </h2>
+        <ProgramPicker value={state.program} onChange={setProgram} labelledBy="program-label" />
+        <p className="text-sm text-zinc-600">
+          Switching keeps everything you've logged. Exercises that appear in both routines keep their history and targets.
+        </p>
       </section>
 
       <section className={card}>
@@ -86,13 +113,19 @@ export function Settings({ state, onBack }: Props) {
       <section className={card}>
         <h2 className="text-lg font-semibold">Data</h2>
         <p className="text-sm text-zinc-600">
-          Everything is stored on this device only. Export a copy to keep a backup, or import one to restore it (for example after reinstalling the app).
+          {signedIn
+            ? 'Your data is saved on this phone and backed up to your account. Export a copy any time, or import one to restore it.'
+            : 'Everything is stored on this device only. Export a copy to keep a backup, or import one to restore it (for example after reinstalling the app).'}
         </p>
         <PrimaryButton onClick={exportJSON}>Export JSON</PrimaryButton>
         <ImportBackup />
         {confirmReset ? (
           <div className="space-y-3 rounded-xl border border-red-300 p-3">
-            <p className="text-sm text-zinc-800">Delete all logged sets, cardio and settings? This can't be undone.</p>
+            <p className="text-sm text-zinc-800">
+              {signedIn
+                ? "Delete all logged sets, cardio and settings, on this phone and in your account? This can't be undone."
+                : "Delete all logged sets, cardio and settings? This can't be undone."}
+            </p>
             <div className="flex gap-2">
               <button type="button" onClick={() => setConfirmReset(false)} className="h-12 flex-1 rounded-xl bg-zinc-100 text-zinc-800 font-medium">
                 Cancel
@@ -115,6 +148,61 @@ export function Settings({ state, onBack }: Props) {
 
       <p className="text-center text-xs text-zinc-500">Overload v{__APP_VERSION__}</p>
     </Screen>
+  );
+}
+
+function AccountSection({ email }: { email: string }) {
+  const status = useSyncStatus();
+  const [signingOut, setSigningOut] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const test = isTestMode();
+  return (
+    <section className={card} aria-labelledby="account-label">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold" id="account-label">
+          Account
+        </h2>
+        {test && <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900">TEST MODE</span>}
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-red-100 text-lg font-semibold text-red-800" aria-hidden="true">
+          {(email[0] ?? '?').toUpperCase()}
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs text-zinc-500">Signed in as</p>
+          <p className="font-medium text-zinc-900 break-all">{email}</p>
+        </div>
+      </div>
+      <p role="status" className={`flex items-start gap-2 text-sm ${status.phase === 'error' ? 'text-red-800' : 'text-zinc-600'}`}>
+        <StatusDot phase={status.phase} className="mt-1.5 shrink-0" />
+        <span>{syncText(status)}</span>
+      </p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          disabled={syncing || status.phase === 'syncing'}
+          onClick={async () => {
+            setSyncing(true);
+            await syncNow();
+            setSyncing(false);
+          }}
+          className="h-12 flex-1 rounded-xl border border-zinc-300 bg-white text-zinc-800 font-medium active:bg-zinc-100 disabled:text-zinc-400"
+        >
+          {syncing || status.phase === 'syncing' ? 'Syncing…' : 'Sync now'}
+        </button>
+        <button
+          type="button"
+          disabled={signingOut}
+          onClick={async () => {
+            setSigningOut(true);
+            await signOut();
+          }}
+          className="h-12 flex-1 rounded-xl bg-zinc-100 text-zinc-800 font-medium active:bg-zinc-300 disabled:text-zinc-500"
+        >
+          {signingOut ? 'Signing out…' : 'Sign out'}
+        </button>
+      </div>
+    </section>
   );
 }
 

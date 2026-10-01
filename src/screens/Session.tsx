@@ -1,5 +1,5 @@
 import { dayName, exercisesFor, isDeload, type Day } from '../routine';
-import { dayKey, setDayDone, type State } from '../store';
+import { isDayDone, setDayDone, type State } from '../store';
 import { DeloadBadge, PrimaryButton, Screen } from '../components/Screen';
 import { ExerciseCard } from '../components/ExerciseCard';
 import { RestBar, RestPicker } from '../components/RestTimer';
@@ -13,12 +13,12 @@ interface Props {
 }
 
 export function Session({ state, week, day, onBack, onProgress }: Props) {
-  const done = !!state.daysDone[dayKey(week, day)];
-  const exercises = exercisesFor(day, week);
+  const done = isDayDone(state, week, day);
+  const exercises = exercisesFor(day, week, state.program);
 
   return (
     <Screen
-      title={`Day ${day} · ${dayName(day)}`}
+      title={`Day ${day} · ${dayName(day, state.program)}`}
       subtitle={
         <span className="flex items-center gap-2">
           Week {week} {isDeload(week) && <DeloadBadge />}

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { TOTAL_WEEKS, isCardioDay, isDeload, type Day, type Exercise } from './routine';
+import { DEFAULT_PROGRAM, TOTAL_WEEKS, isCardioDay, isDeload, type Day, type Exercise, type ProgramId } from './routine';
 
 export type Unit = 'kg' | 'lb';
 export type Band = 'light' | 'medium' | 'heavy';
@@ -33,15 +33,18 @@ export interface State {
   startDate: string; // ISO date (YYYY-MM-DD) of week 1, day 1. Empty until first launch is done.
   unit: Unit;
   logs: Record<string, SetLog[]>; // key: `${week}:${exerciseId}`
-  daysDone: Record<string, boolean>; // key: `${week}:${day}`
-  cardio: Record<number, Cardio>;
+  program: ProgramId; // the routine this person follows
+  daysDone: Record<string, boolean>; // key: dayKey(week, day, program)
+  cardio: Record<string, Cardio>; // key: dayKey(week, day, program) of a cardio day
   restSeconds: RestSeconds; // rest timer length
   autoRest: boolean; // start the rest timer automatically after each logged set
+  updatedAt: string; // ISO time of the last local change ('' = never), used to sync with the cloud
   routineVersion: number; // day numbering in daysDone (see migrateState)
 }
 
 // 1: Glutes, Legs, Arms, Chest, Back. 2: Legs, Arms, Chest, Back, Cardio.
-export const ROUTINE_VERSION = 2;
+// 3: cardio keyed per day (dayKey) instead of per week, for routines with several cardio days.
+export const ROUTINE_VERSION = 3;
 
 export type RestSeconds = 30 | 60 | 90;
 export const REST_OPTIONS: RestSeconds[] = [30, 60, 90];
@@ -52,38 +55,59 @@ export const KG_PER_LB = 1 / 2.20462;
 export const emptyState = (): State => ({
   startDate: '',
   unit: 'kg',
+  program: DEFAULT_PROGRAM,
   logs: {},
   daysDone: {},
   cardio: {},
   restSeconds: 60,
   autoRest: false,
+  updatedAt: '',
   routineVersion: ROUTINE_VERSION,
 });
 
-// Bring saved data up to the current day order. Idempotent.
+// Bring saved data up to the current format, one version at a time. Idempotent.
 // v1 → v2: Glutes (1) and Legs (2) merge into Legs (1); Arms, Chest and Back move from
-// days 3–5 to 2–4. Day 5 is now cardio, whose done state comes from the cardio log.
+//   days 3–5 to 2–4. Day 5 is now cardio, whose done state comes from the cardio log.
+// v2 → v3: the weekly cardio entry becomes Day 5's entry (all v2 data is the Overload routine).
 export function migrateState(s: State): State {
-  if ((s.routineVersion ?? 1) >= ROUTINE_VERSION) return s;
-  const toV2: Record<string, number> = { '1': 1, '2': 1, '3': 2, '4': 3, '5': 4 };
-  const daysDone: Record<string, boolean> = {};
-  for (const [key, done] of Object.entries(s.daysDone)) {
-    const [week, day] = key.split(':');
-    const next = toV2[day];
-    if (done && next) daysDone[`${week}:${next}`] = true;
+  const version = s.routineVersion ?? 1;
+  if (version >= ROUTINE_VERSION) return s;
+  let next = s;
+  if (version < 2) {
+    const toV2: Record<string, number> = { '1': 1, '2': 1, '3': 2, '4': 3, '5': 4 };
+    const daysDone: Record<string, boolean> = {};
+    for (const [key, done] of Object.entries(next.daysDone)) {
+      const [week, day] = key.split(':');
+      const moved = toV2[day];
+      if (done && moved) daysDone[`${week}:${moved}`] = true;
+    }
+    next = { ...next, daysDone };
   }
-  return { ...s, daysDone, routineVersion: ROUTINE_VERSION };
+  if (version < 3) {
+    const cardio: Record<string, Cardio> = {};
+    for (const [key, entry] of Object.entries(next.cardio)) cardio[key.includes(':') ? key : `${key}:5`] = entry;
+    next = { ...next, cardio };
+  }
+  return { ...next, routineVersion: ROUTINE_VERSION };
 }
+
+// Fill in fields added since the data was saved, then migrate it. Used for both
+// localStorage and cloud copies. No routineVersion means the original (v1) day order.
+export const fromSaved = (saved: Partial<State>): State =>
+  migrateState({ ...emptyState(), routineVersion: 1, ...saved });
 
 // ---------- persistence ----------
 
-export function load(): State {
+// Local-only mode uses one key. Signed in, each user gets their own slot so two
+// people sharing a phone never see each other's data.
+export const userStorageKey = (userId: string) => `${STORAGE_KEY}:${userId}`;
+let storageKey = STORAGE_KEY;
+
+export function load(key = storageKey): State {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return emptyState();
-    const parsed = JSON.parse(raw) as Partial<State>;
-    // Saved before routineVersion existed means the original (v1) day order.
-    return migrateState({ ...emptyState(), routineVersion: 1, ...parsed });
+    return fromSaved(JSON.parse(raw) as Partial<State>);
   } catch {
     return emptyState();
   }
@@ -91,7 +115,7 @@ export function load(): State {
 
 function save(s: State) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+    localStorage.setItem(storageKey, JSON.stringify(s));
   } catch {
     // Storage full or blocked: the in-memory state still works for this session.
   }
@@ -99,22 +123,53 @@ function save(s: State) {
 
 let state: State = load(); // load() falls back to empty state if storage is missing or blocked
 const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((l) => l());
 
 export function getState() {
   return state;
 }
 
+// Every local change is stamped so sync can tell which copy is newer.
 export function setState(update: (s: State) => State) {
-  state = update(state);
+  state = { ...update(state), updatedAt: new Date().toISOString() };
   save(state);
-  listeners.forEach((l) => l());
+  notify();
+}
+
+// Replace the whole state as-is (keeping its updatedAt), e.g. with a copy pulled from the cloud.
+export function replaceState(next: State) {
+  state = fromSaved(next);
+  save(state);
+  notify();
 }
 
 export function resetState() {
   setState(() => emptyState());
 }
 
-function subscribe(l: () => void) {
+export const hasData = (s: State) => s.startDate !== '' || Object.keys(s.logs).length > 0;
+
+// Point the store at a user's slot (or back to local-only with null). The first time a
+// user signs in on a device, data logged before accounts existed moves into their slot
+// and the anonymous copy is removed, so it's only ever adopted once.
+export function switchUser(userId: string | null) {
+  storageKey = userId ? userStorageKey(userId) : STORAGE_KEY;
+  if (userId) {
+    try {
+      const anon = localStorage.getItem(STORAGE_KEY);
+      if (anon !== null) {
+        if (localStorage.getItem(storageKey) === null) localStorage.setItem(storageKey, anon);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      // Storage blocked: carry on with whatever load() can read.
+    }
+  }
+  state = load();
+  notify();
+}
+
+export function subscribe(l: () => void) {
   listeners.add(l);
   return () => listeners.delete(l);
 }
@@ -126,11 +181,16 @@ export function useStore(): State {
 // ---------- keys ----------
 
 export const logKey = (week: number, exId: string) => `${week}:${exId}`;
-export const dayKey = (week: number, day: Day) => `${week}:${day}`;
+// Overload keeps the original unprefixed keys; other routines get their own, so switching
+// routine never shows another routine's days as done.
+export const dayKey = (week: number, day: Day, program: ProgramId = DEFAULT_PROGRAM) =>
+  program === DEFAULT_PROGRAM ? `${week}:${day}` : `${program}:${week}:${day}`;
 
-// The cardio day is done once that week's cardio is logged; lifting days when finished.
+// A cardio day is done once its cardio is logged; lifting days when finished.
 export const isDayDone = (s: State, week: number, day: Day) =>
-  isCardioDay(day) ? !!s.cardio[week] : !!s.daysDone[dayKey(week, day)];
+  isCardioDay(day, s.program) ? !!s.cardio[dayKey(week, day, s.program)] : !!s.daysDone[dayKey(week, day, s.program)];
+
+export const cardioFor = (s: State, week: number, day: Day): Cardio | undefined => s.cardio[dayKey(week, day, s.program)];
 
 // ---------- dates & weeks ----------
 
@@ -336,11 +396,23 @@ export function removeSet(week: number, exId: string, index: number) {
 }
 
 export function setDayDone(week: number, day: Day, done: boolean) {
-  setState((s) => ({ ...s, daysDone: { ...s.daysDone, [dayKey(week, day)]: done } }));
+  setState((s) => ({ ...s, daysDone: { ...s.daysDone, [dayKey(week, day, s.program)]: done } }));
 }
 
-export function saveCardio(week: number, entry: Cardio) {
-  setState((s) => ({ ...s, cardio: { ...s.cardio, [week]: entry } }));
+export function saveCardio(week: number, day: Day, entry: Cardio) {
+  setState((s) => ({ ...s, cardio: { ...s.cardio, [dayKey(week, day, s.program)]: entry } }));
+}
+
+export function deleteCardio(week: number, day: Day) {
+  setState((s) => {
+    const cardio = { ...s.cardio };
+    delete cardio[dayKey(week, day, s.program)];
+    return { ...s, cardio };
+  });
+}
+
+export function setProgram(program: ProgramId) {
+  setState((s) => ({ ...s, program }));
 }
 
 export function setUnit(unit: Unit) {

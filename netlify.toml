@@ -1,0 +1,10 @@
+# Deploy previews (pull requests) run the account screens in TEST MODE: a pretend
+# backend in the browser with ready-made test accounts, so the sign-in flow can be
+# tried before Supabase is connected. Production and branch deploys never get this.
+# Once VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in Netlify, they take
+# priority and previews use the real backend instead (see src/cloud.ts).
+#
+# Build settings (command, publish directory) stay in the Netlify UI; this file only
+# adds an environment variable for previews.
+[context.deploy-preview.environment]
+  VITE_FAKE_CLOUD = "1"
