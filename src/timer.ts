@@ -66,17 +66,32 @@ function subscribe(l: () => void) {
   return () => listeners.delete(l);
 }
 
+// Whole seconds left in a rest, from the end time and the clock right now. Clamped to
+// 0…total so it never shows more than the length chosen, even for an instant.
+export function restRemaining(endsAt: number, total: number, now = Date.now()): number {
+  return Math.min(total, Math.max(0, Math.ceil((endsAt - now) / 1000)));
+}
+
+export const isResting = () => timer.endsAt !== null && timer.endsAt > Date.now();
+
 // Seconds left (0 when finished), or null when no rest is running.
+// The time left is read from the clock on every render; the interval and the
+// return-to-foreground listener only trigger those renders.
 export function useRest(): { remaining: number | null; total: number; endsAt: number | null } {
   const t = useSyncExternalStore(subscribe, () => timer, () => timer);
-  const [now, setNow] = useState(() => Date.now());
+  const [, tick] = useState(0);
   useEffect(() => {
     if (t.endsAt === null) return;
-    const id = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(id);
+    const rerender = () => tick((n) => n + 1);
+    const id = setInterval(rerender, 250);
+    document.addEventListener('visibilitychange', rerender);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', rerender);
+    };
   }, [t.endsAt]);
   if (t.endsAt === null) return { remaining: null, total: 0, endsAt: null };
-  return { remaining: Math.max(0, Math.ceil((t.endsAt - now) / 1000)), total: t.total, endsAt: t.endsAt };
+  return { remaining: restRemaining(t.endsAt, t.total), total: t.total, endsAt: t.endsAt };
 }
 
 export const formatClock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
