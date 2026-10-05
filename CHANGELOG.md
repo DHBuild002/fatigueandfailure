@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+- Rest timer always counts down from the length you chose. It could briefly show a higher number (e.g. 1:09 for a 60 s rest) when started, and changing 30/60/90 s mid-rest now restarts the countdown at the new length.
+
 ## 2.0.0
 
 - Invite-only accounts: sign in with an emailed code, each person's data private to them.

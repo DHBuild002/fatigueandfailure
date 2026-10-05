@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { REST_OPTIONS, setRestSeconds, type RestSeconds } from '../store';
-import { formatClock, startRest, stopRest, useRest } from '../timer';
+import { formatClock, isResting, startRest, stopRest, useRest } from '../timer';
 
 // Bottom-bar content for the day screen: the Rest button stacked above Finish day.
 // While resting, a red fill sweeps across the Rest button from left to right, led by a
@@ -77,7 +77,11 @@ export function RestPicker({ value, id }: { value: RestSeconds; id: string }) {
           type="button"
           role="radio"
           aria-checked={value === s}
-          onClick={() => setRestSeconds(s)}
+          onClick={() => {
+            setRestSeconds(s);
+            // Mid-rest, a new length restarts the countdown from that length.
+            if (isResting() && value !== s) startRest(s);
+          }}
           className={`h-12 flex-1 rounded-xl text-base tabular-nums ${value === s ? 'bg-red-700 text-white font-semibold' : 'bg-zinc-100 text-zinc-700'}`}
         >
           {s}s
