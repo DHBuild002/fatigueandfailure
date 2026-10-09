@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.2
+
+- Overload Day 3 is now "Chest & shoulders", and its B lift is labelled "Seated dumbbell overhead press" (it mainly trains shoulders and triceps; do it seated for stricter, safer reps). Logged history and targets carry over.
+
 ## 2.0.1
 
 - Rest timer always counts down from the length you chose. It could briefly show a higher number (e.g. 1:09 for a 60 s rest) when started, and changing 30/60/90 s mid-rest now restarts the countdown at the new length.

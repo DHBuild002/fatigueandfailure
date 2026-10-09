@@ -50,7 +50,7 @@ export const PROGRAMS: Record<ProgramId, Program> = {
     days: [
       { day: 1, name: 'Legs', kind: 'lifts' },
       { day: 2, name: 'Arms', kind: 'lifts' },
-      { day: 3, name: 'Chest', kind: 'lifts' },
+      { day: 3, name: 'Chest & shoulders', kind: 'lifts' },
       { day: 4, name: 'Back', kind: 'lifts' },
       { day: 5, name: 'Cardio', kind: 'cardio' },
     ],
@@ -66,7 +66,7 @@ export const PROGRAMS: Record<ProgramId, Program> = {
       B('wrist-flexor-curl', 2, 'Wrist flexor curl', 3, 15),
 
       A('bench-press', 3, 'Barbell bench press'),
-      B('db-overhead-press', 3, 'Dumbbell overhead press', 3, 12),
+      B('db-overhead-press', 3, 'Seated dumbbell overhead press', 3, 12),
 
       A('bent-over-row', 4, 'Barbell bent-over row'),
       B('romanian-deadlift', 4, 'Barbell Romanian deadlift', 3, 12),
