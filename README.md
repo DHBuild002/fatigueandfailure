@@ -10,7 +10,7 @@ A mobile-first, offline PWA for running the **Failure & Fatigue** routine: one f
 - **Progress.** Each weighted exercise has a Progress view: estimated max per week (Epley), best set, change since week 1, and a week-12 projection shown as a working set, with the trend capped at 1.5% a week.
 - **Rest timer.** A Rest button above Finish day counts down 30, 60 or 90 s (chosen on the day screen or in Settings): a red fill with a radial glow sweeps across the button and reaches the right edge at 0:00, then it beeps. Tap the button again to stop early. Manual by default; Settings can start it automatically after each logged set.
 - **Four built-in routines**, picked on the welcome screen and changeable in Settings. All are 5 days a week:
-  - **Overload:** Legs, Arms, Chest, Back, Cardio. Heavy barbell lifts to failure.
+  - **Overload:** Legs, Arms, Chest & shoulders, Back, Cardio. Heavy barbell lifts to failure.
   - **Cardio focus:** Cardio, Full body A, Cardio, Full body B, Cardio.
   - **Light volume:** Legs, Arms, Chest, Back, Cardio. One light set to failure, then 4×12–20 work.
   - **Gym volume:** Legs, Arms, Chest & shoulders, Back, Cardio. Machines and cables, 4 sets.
