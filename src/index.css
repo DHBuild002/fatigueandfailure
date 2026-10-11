@@ -97,3 +97,19 @@ input[type="date"]::-webkit-date-and-time-value {
     animation: none;
   }
 }
+
+/* A set that beats last week flashes red once as it lands in the list. */
+@keyframes set-beat {
+  from {
+    background-color: var(--color-red-200);
+    box-shadow: 0 0 0 2px var(--color-red-700);
+  }
+}
+.set-beat {
+  animation: set-beat 1.4s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .set-beat {
+    animation: none;
+  }
+}

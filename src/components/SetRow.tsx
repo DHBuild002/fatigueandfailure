@@ -1,6 +1,6 @@
 import { useRef, useState, type RefObject } from 'react';
 import type { Exercise } from '../routine';
-import { BANDS, beats, effortLabel, formatNumber, fromDisplay, toDisplay, weightStep, type Band, type Effort, type SetLog, type Unit } from '../store';
+import { BANDS, bandRank, beats, effortLabel, formatNumber, fromDisplay, toDisplay, weightStep, type Band, type Effort, type SetLog, type Unit } from '../store';
 import { EffortPicker, EffortPill } from './Effort';
 import { Stepper } from './Stepper';
 import { ArrowUp, Check, Close } from './Icons';
@@ -124,12 +124,15 @@ interface ViewProps {
 
 export function SetRow({ index, set, prev, unit, perSide, onEdit }: ViewProps) {
   const up = beats(set, prev, unit);
+  const d = delta(set, prev, unit);
+  // Flash once when a set that beats last week has just been logged (not on every screen open).
+  const [flash] = useState(() => up && Date.now() - Date.parse(set.at) < 3000);
   const load = set.band ? <span className="capitalize">{set.band}</span> : `${formatNumber(toDisplay(set.weightKg ?? 0, unit))} ${unit}`;
   return (
     <button
       type="button"
       onClick={onEdit}
-      className="h-12 w-full flex items-center gap-3 rounded-xl bg-zinc-100 px-3 text-left active:bg-zinc-100"
+      className={`h-12 w-full flex items-center gap-3 rounded-xl bg-zinc-100 px-3 text-left active:bg-zinc-200 ${flash ? 'set-beat' : ''}`}
     >
       <span className="text-xs text-zinc-500 w-10">Set {index + 1}</span>
       <span className="flex-1 text-base tabular-nums text-zinc-800">
@@ -137,12 +140,32 @@ export function SetRow({ index, set, prev, unit, perSide, onEdit }: ViewProps) {
         {perSide && <span className="text-sm text-zinc-600">/{perSide}</span>}
       </span>
       <EffortPill effort={set.effort} />
-      {up && (
-        <span className="flex items-center gap-1 text-red-700 text-sm font-medium">
-          <ArrowUp className="w-5 h-5" />
-          <span className="sr-only">Beat last week</span>
+      {d && (
+        <span className={`min-w-11 flex items-center justify-end gap-0.5 text-sm font-semibold tabular-nums ${up ? 'text-red-700' : 'text-zinc-500'}`}>
+          {up && <ArrowUp className="w-4 h-4" />}
+          <span aria-hidden>{d.text}</span>
+          <span className="sr-only">{d.label}</span>
         </span>
       )}
     </button>
   );
+}
+
+// Change against last week's matching set: the load if it moved, otherwise the reps.
+function delta(set: SetLog, prev: SetLog | undefined, unit: Unit): { text: string; label: string } | undefined {
+  if (!prev) return undefined;
+  const sign = (n: number) => (n > 0 ? `+${n}` : `−${-n}`);
+  if (set.band || prev.band) {
+    const steps = bandRank(set.band) - bandRank(prev.band);
+    if (steps !== 0) return { text: `${sign(steps)} band`, label: `${Math.abs(steps)} band ${steps > 0 ? 'heavier' : 'lighter'} than last week` };
+  } else {
+    const kg = Math.round((toDisplay(set.weightKg ?? 0, unit) - toDisplay(prev.weightKg ?? 0, unit)) * 100) / 100;
+    if (kg !== 0) {
+      const n = formatNumber(Math.abs(kg));
+      return { text: `${kg > 0 ? '+' : '−'}${n} ${unit}`, label: `${n} ${unit} ${kg > 0 ? 'heavier' : 'lighter'} than last week` };
+    }
+  }
+  const reps = set.reps - prev.reps;
+  if (reps === 0) return { text: '=', label: 'Same as last week' };
+  return { text: sign(reps), label: `${Math.abs(reps)} ${Math.abs(reps) === 1 ? 'rep' : 'reps'} ${reps > 0 ? 'more' : 'fewer'} than last week` };
 }
