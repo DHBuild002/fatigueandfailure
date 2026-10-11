@@ -54,36 +54,49 @@ export function ExerciseCard({ exercise, week, state, onProgress }: Props) {
   const isA = exercise.role === 'A';
 
   return (
-    <section className="rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 space-y-3" aria-labelledby={`ex-${exercise.id}`}>
+    <section
+      // A (failure) cards carry a solid red border, so intensity reads before any text.
+      className={`rounded-2xl bg-white shadow-sm p-4 space-y-3 ${isA ? 'border-[3px] border-red-700' : 'border border-zinc-200'}`}
+      aria-labelledby={`ex-${exercise.id}`}
+    >
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <h2 id={`ex-${exercise.id}`} className="text-lg font-semibold leading-snug">
+          <h2 id={`ex-${exercise.id}`} className={`leading-snug ${isA ? 'text-xl font-bold' : 'text-lg font-semibold'}`}>
             {exercise.name}
           </h2>
           <p className="text-sm text-zinc-700">{exercise.prescription}</p>
         </div>
         <span
-          className={`rounded-full px-2 text-xs py-0.5 font-medium shrink-0 ${isA ? 'bg-red-100 text-red-800' : 'bg-zinc-100 text-zinc-700'}`}
+          className={`rounded-full px-2 text-xs py-0.5 font-semibold shrink-0 ${isA ? 'bg-red-700 text-white' : 'bg-zinc-100 text-zinc-700'}`}
         >
           {isA ? 'A · Failure' : 'B · Steady'}
         </span>
       </div>
 
       {best && target ? (
-        <dl className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
-            <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">Last best</dt>
-            <dd className="text-sm font-medium tabular-nums text-zinc-700">
-              <StatValue set={best} unit={state.unit} perSide={exercise.perSide} />
-            </dd>
-            <dd className="text-xs text-zinc-500">Week {prev!.week}</dd>
+        <dl className={`rounded-xl border p-3 ${isA ? 'bg-red-50 border-red-200' : 'bg-zinc-50 border-zinc-200'}`}>
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <div>
+              <dt className="sr-only">Last best, week {prev!.week}</dt>
+              <dd className="text-base tabular-nums text-zinc-500">
+                <StatValue set={best} unit={state.unit} perSide={exercise.perSide} />
+              </dd>
+            </div>
+            <span aria-hidden className={isA ? 'text-red-700' : 'text-zinc-500'}>
+              →
+            </span>
+            <div>
+              <dt className="sr-only">Target</dt>
+              <dd className={`text-3xl font-bold tabular-nums leading-tight ${isA ? 'text-red-700' : 'text-zinc-900'}`}>
+                <StatValue set={target} unit={state.unit} perSide={exercise.perSide} />
+              </dd>
+            </div>
           </div>
-          <div className="rounded-xl bg-red-50 border border-red-200 p-3">
-            <dt className="text-xs font-medium uppercase tracking-wide text-red-800">Target</dt>
-            <dd className="text-sm font-medium tabular-nums text-red-800">
-              <StatValue set={target} unit={state.unit} perSide={exercise.perSide} />
+          <div>
+            <dt className="sr-only">How</dt>
+            <dd className={`text-sm ${isA ? 'text-red-800' : 'text-zinc-600'}`}>
+              {targetNote(exercise, target, week, state.unit)} · best from week {prev!.week}
             </dd>
-            <dd className="text-xs text-red-800">{targetNote(exercise, target, week, state.unit)}</dd>
           </div>
         </dl>
       ) : (
