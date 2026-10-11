@@ -55,11 +55,10 @@ export function ExerciseCard({ exercise, week, state, onProgress }: Props) {
 
   return (
     <section
-      className={`relative overflow-hidden rounded-2xl bg-white border shadow-sm p-4 space-y-3 ${isA ? 'border-red-200' : 'border-zinc-200'}`}
+      // A (failure) cards carry a solid red border, so intensity reads before any text.
+      className={`rounded-2xl bg-white shadow-sm p-4 space-y-3 ${isA ? 'border-[3px] border-red-700' : 'border border-zinc-200'}`}
       aria-labelledby={`ex-${exercise.id}`}
     >
-      {/* A (failure) cards carry a solid red band, so intensity reads before any text. */}
-      {isA && <div className="absolute inset-x-0 top-0 h-1.5 bg-red-700" aria-hidden />}
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <h2 id={`ex-${exercise.id}`} className={`leading-snug ${isA ? 'text-xl font-bold' : 'text-lg font-semibold'}`}>
