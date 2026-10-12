@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+
+- Travel mode, for when your gym isn't available. Switch it on from Home and tick your kit in Settings (free weights, cable machine, treadmill, rower). Each lifting day keeps its focus and shows two picks: one using your kit (or a rower/treadmill finisher if that's all you have) and one bodyweight move for the same muscles, so there's always a workout. Picks stay the same for the week, Shuffle re-rolls them until you log a set, and the cardio day suggests a session for your kit.
+- Bodyweight exercises log reps only (or seconds / rounds where stated) and show as "BW × 15"; targets add a rep, or two once every steady set is hit.
+
 ## 2.0.2
 
 - Overload Day 3 is now "Chest & shoulders", and its B lift is labelled "Seated dumbbell overhead press" (it mainly trains shoulders and triceps; do it seated for stricter, safer reps). Logged history and targets carry over.

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Day } from '../routine';
 import { cardioFor, deleteCardio, distanceFromDisplay, distanceToDisplay, distanceUnit, formatNumber, saveCardio, type State } from '../store';
 import { PrimaryButton, Screen } from '../components/Screen';
+import { cardioSuggestion } from '../travel';
 
 interface Props {
   state: State;
@@ -49,6 +50,11 @@ export function Cardio({ state, week, day, onBack }: Props) {
         </PrimaryButton>
       }
     >
+      {state.travel && (
+        <p className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+          <strong className="font-semibold">Travel mode:</strong> {cardioSuggestion(state.kit)}
+        </p>
+      )}
       <form
         className="space-y-6"
         onSubmit={(e) => {

@@ -1,5 +1,7 @@
-import { dayName, exercisesFor, isDeload, type Day } from '../routine';
-import { isDayDone, setDayDone, type State } from '../store';
+import { useEffect } from 'react';
+import { dayName, daysFor, isDeload, type Day } from '../routine';
+import { dayKey, isDayDone, logKey, saveTravelPicks, setDayDone, type State } from '../store';
+import { dayExercises, pickTravel, travelSeed } from '../travel';
 import { DeloadBadge, PrimaryButton, Screen } from '../components/Screen';
 import { ExerciseCard } from '../components/ExerciseCard';
 import { RestBar, RestPicker } from '../components/RestTimer';
@@ -14,7 +16,27 @@ interface Props {
 
 export function Session({ state, week, day, onBack, onProgress }: Props) {
   const done = isDayDone(state, week, day);
-  const exercises = exercisesFor(day, week, state.program);
+  const key = dayKey(week, day, state.program);
+  const exercises = dayExercises(state, day, week, key);
+  const focus = daysFor(state.program).find((d) => d.day === day)?.focus;
+  const travelDay = state.travel && !!focus;
+  const logged = exercises.some((e) => (state.logs[logKey(week, e.id)]?.length ?? 0) > 0);
+
+  // Once a set is logged on a travel day, keep that week's picks so the logs stay with them
+  // (even if the kit changes later).
+  useEffect(() => {
+    if (travelDay && logged && !state.travelPicks[key]) saveTravelPicks(key, exercises.map((e) => e.id));
+  }, [travelDay, logged, key, exercises, state.travelPicks]);
+
+  const shuffle = () => {
+    if (!focus) return;
+    const current = exercises.map((e) => e.id).join();
+    // A few tries, so a shuffle almost always shows something new.
+    for (let i = 0; i < 8; i++) {
+      const next = pickTravel(focus, state.kit, travelSeed(week, day, state.program, state.kit, `${Date.now()}:${i}`));
+      if (next.join() !== current || i === 7) return saveTravelPicks(key, next);
+    }
+  };
 
   return (
     <Screen
@@ -41,8 +63,28 @@ export function Session({ state, week, day, onBack, onProgress }: Props) {
         />
       }
     >
+      {travelDay && (
+        <section className="flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3" aria-label="Travel mode">
+          <p className="flex-1 text-sm text-amber-950">
+            <strong className="font-semibold">Travel mode.</strong> Two picks for your kit: one with equipment (or a cardio finisher), one bodyweight.
+          </p>
+          <button
+            type="button"
+            onClick={shuffle}
+            disabled={logged}
+            className="h-11 shrink-0 rounded-lg border border-amber-400 bg-white px-3 text-sm font-medium text-amber-950 active:bg-amber-100 disabled:opacity-50"
+          >
+            Shuffle
+          </button>
+        </section>
+      )}
+
       <p className="text-sm text-zinc-600">
-        {isDeload(week)
+        {travelDay
+          ? isDeload(week)
+            ? 'Deload week: 3 easy sets of 12 each.'
+            : 'Alternate the two. Take each set to failure; rest 60–90 s.'
+          : isDeload(week)
           ? 'Deload week: B exercises only. 2–3 rounds.'
           : 'Superset A then B. Rest 90–120 s between rounds, 2–3 rounds.'}
       </p>

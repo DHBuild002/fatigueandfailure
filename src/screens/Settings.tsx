@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
-import { currentWeek, getState, resetState, setAutoRest, setProgram, setStartDate, setState, setUnit, todayISO, type State, type Unit } from '../store';
+import { setKit, currentWeek, getState, resetState, setAutoRest, setProgram, setStartDate, setState, setUnit, todayISO, type State, type Unit } from '../store';
 import { parseBackup, type ParsedBackup } from '../backup';
 import { RestPicker } from '../components/RestTimer';
 import { PrimaryButton, Screen } from '../components/Screen';
 import { ProgramPicker } from '../components/ProgramPicker';
+import { KIT_OPTIONS } from '../travel';
 import { TOTAL_WEEKS } from '../routine';
 import { isTestMode, signOut, syncNow, useAccount } from '../account';
 import { StatusDot } from '../components/SyncBadge';
@@ -67,6 +68,30 @@ export function Settings({ state, onBack }: Props) {
         <p className="text-sm text-zinc-600">
           Switching keeps everything you've logged. Exercises that appear in both routines keep their history and targets.
         </p>
+      </section>
+
+      <section className={card} aria-labelledby="kit-label">
+        <h2 className="text-lg font-semibold" id="kit-label">
+          Travel kit
+        </h2>
+        <p className="text-sm text-zinc-600">What you can use when Travel mode is on. Bodyweight moves are always included.</p>
+        <div className="grid grid-cols-2 gap-2">
+          {KIT_OPTIONS.map((k) => {
+            const on = state.kit.includes(k.value);
+            return (
+              <button
+                key={k.value}
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                onClick={() => setKit(on ? state.kit.filter((x) => x !== k.value) : [...state.kit, k.value])}
+                className={`h-12 rounded-xl text-base ${on ? 'bg-red-700 text-white font-semibold' : 'bg-zinc-100 text-zinc-700'}`}
+              >
+                {k.label}
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       <section className={card}>

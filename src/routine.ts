@@ -9,7 +9,7 @@ export interface Exercise {
   role: Role;
   name: string;
   prescription: string;
-  load: 'weight' | 'band';
+  load: 'weight' | 'band' | 'bodyweight'; // bodyweight: reps only (or seconds / rounds, as prescribed)
   perSide?: 'leg' | 'arm'; // reps are logged per leg / per arm
   // Prescribed sets × reps for steady (B) work. Failure (A) sets are open-ended.
   scheme?: { sets: number; reps: number };
@@ -22,7 +22,10 @@ export interface DayPlan {
   day: Day;
   name: string;
   kind: 'lifts' | 'cardio'; // a cardio day has no lifts and opens the cardio log instead
+  focus?: Focus; // muscle group of a lifting day, used by Travel Mode
 }
+
+export type Focus = 'legs' | 'arms' | 'chest' | 'back' | 'full';
 export interface Program {
   id: ProgramId;
   name: string;
@@ -48,10 +51,10 @@ export const PROGRAMS: Record<ProgramId, Program> = {
     name: 'Overload',
     blurb: 'Heavy barbell lifts to failure, one muscle group a day, plus weekly cardio.',
     days: [
-      { day: 1, name: 'Legs', kind: 'lifts' },
-      { day: 2, name: 'Arms', kind: 'lifts' },
-      { day: 3, name: 'Chest & shoulders', kind: 'lifts' },
-      { day: 4, name: 'Back', kind: 'lifts' },
+      { day: 1, name: 'Legs', kind: 'lifts', focus: 'legs' },
+      { day: 2, name: 'Arms', kind: 'lifts', focus: 'arms' },
+      { day: 3, name: 'Chest & shoulders', kind: 'lifts', focus: 'chest' },
+      { day: 4, name: 'Back', kind: 'lifts', focus: 'back' },
       { day: 5, name: 'Cardio', kind: 'cardio' },
     ],
     exercises: [
@@ -78,9 +81,9 @@ export const PROGRAMS: Record<ProgramId, Program> = {
     blurb: 'Three cardio days and two short full-body lifting days.',
     days: [
       { day: 1, name: 'Cardio', kind: 'cardio' },
-      { day: 2, name: 'Full body A', kind: 'lifts' },
+      { day: 2, name: 'Full body A', kind: 'lifts', focus: 'full' },
       { day: 3, name: 'Cardio', kind: 'cardio' },
-      { day: 4, name: 'Full body B', kind: 'lifts' },
+      { day: 4, name: 'Full body B', kind: 'lifts', focus: 'full' },
       { day: 5, name: 'Cardio', kind: 'cardio' },
     ],
     exercises: [
@@ -98,10 +101,10 @@ export const PROGRAMS: Record<ProgramId, Program> = {
     name: 'Light volume',
     blurb: 'Lighter weights and more reps: one light set to failure, then high-rep work.',
     days: [
-      { day: 1, name: 'Legs', kind: 'lifts' },
-      { day: 2, name: 'Arms', kind: 'lifts' },
-      { day: 3, name: 'Chest', kind: 'lifts' },
-      { day: 4, name: 'Back', kind: 'lifts' },
+      { day: 1, name: 'Legs', kind: 'lifts', focus: 'legs' },
+      { day: 2, name: 'Arms', kind: 'lifts', focus: 'arms' },
+      { day: 3, name: 'Chest', kind: 'lifts', focus: 'chest' },
+      { day: 4, name: 'Back', kind: 'lifts', focus: 'back' },
       { day: 5, name: 'Cardio', kind: 'cardio' },
     ],
     exercises: [
@@ -129,10 +132,10 @@ export const PROGRAMS: Record<ProgramId, Program> = {
     name: 'Gym volume',
     blurb: 'More volume on machines and cables, with a different exercise set.',
     days: [
-      { day: 1, name: 'Legs', kind: 'lifts' },
-      { day: 2, name: 'Arms', kind: 'lifts' },
-      { day: 3, name: 'Chest & shoulders', kind: 'lifts' },
-      { day: 4, name: 'Back', kind: 'lifts' },
+      { day: 1, name: 'Legs', kind: 'lifts', focus: 'legs' },
+      { day: 2, name: 'Arms', kind: 'lifts', focus: 'arms' },
+      { day: 3, name: 'Chest & shoulders', kind: 'lifts', focus: 'chest' },
+      { day: 4, name: 'Back', kind: 'lifts', focus: 'back' },
       { day: 5, name: 'Cardio', kind: 'cardio' },
     ],
     exercises: [

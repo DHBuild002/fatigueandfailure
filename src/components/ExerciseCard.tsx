@@ -41,7 +41,11 @@ export function ExerciseCard({ exercise, week, state, onProgress }: Props) {
     // Pre-fill with the target load; with no history, fall back to the last set logged this session.
     const last = sets[sets.length - 1];
     const initial: Partial<SetLog> =
-      exercise.load === 'band' ? { band: target?.band ?? last?.band } : { weightKg: target?.weightKg ?? last?.weightKg };
+      exercise.load === 'band'
+        ? { band: target?.band ?? last?.band }
+        : exercise.load === 'bodyweight'
+          ? {}
+          : { weightKg: target?.weightKg ?? last?.weightKg };
     // Render synchronously so focusing the reps field stays inside the tap gesture
     // (iOS only opens the keypad for focus() calls made during a user gesture).
     flushSync(() => {
@@ -175,6 +179,10 @@ export function ExerciseCard({ exercise, week, state, onProgress }: Props) {
 
 function targetNote(ex: Exercise, t: Target, week: number, unit: Unit): string {
   if (isDeload(week)) return 'Deload: hold the load';
+  if (ex.load === 'bodyweight') {
+    if (ex.role === 'A' || !ex.scheme) return 'One more than last time';
+    return t.progressed ? 'Every set hit: +2 reps' : `Hit ${ex.scheme.sets}×${ex.scheme.reps}, then add reps`;
+  }
   if (t.reason === 'easy' && (ex.role === 'A' || !ex.scheme)) return 'Felt easy: go heavier';
   if (t.reason === 'moderate') return 'Felt moderate: add weight';
   if (ex.role === 'A' || !ex.scheme) return 'Same load, one more rep';
@@ -186,7 +194,7 @@ function targetNote(ex: Exercise, t: Target, week: number, unit: Unit): string {
 
 // "60 kg × 12/leg", breaking only between the load and the reps on narrow screens.
 function StatValue({ set, unit, perSide }: { set: Pick<SetLog, 'weightKg' | 'band' | 'reps'>; unit: Unit; perSide?: 'leg' | 'arm' }) {
-  const load = set.band ?? `${formatNumber(toDisplay(set.weightKg ?? 0, unit))} ${unit}`;
+  const load = set.band ?? (set.weightKg === undefined ? 'Bodyweight' : `${formatNumber(toDisplay(set.weightKg, unit))} ${unit}`);
   return (
     <>
       <span className={`whitespace-nowrap ${set.band ? 'capitalize' : ''}`}>{load}</span>{' '}

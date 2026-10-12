@@ -1,5 +1,6 @@
-import { TOTAL_WEEKS, daysFor, exercisesFor, isDeload, programOf, type Day } from '../routine';
-import { cardioFor, distanceToDisplay, distanceUnit, formatNumber, isDayDone, type State } from '../store';
+import { TOTAL_WEEKS, daysFor, isDeload, programOf, type Day } from '../routine';
+import { KIT_OPTIONS, dayExercises } from '../travel';
+import { setTravel, dayKey, cardioFor, distanceToDisplay, distanceUnit, formatNumber, isDayDone, type State } from '../store';
 import { DeloadBadge, Screen } from '../components/Screen';
 import { Check, ChevronLeft, ChevronRight, Cloud, Gear } from '../components/Icons';
 import { useAccount } from '../account';
@@ -60,6 +61,7 @@ export function Home({ state, week, current, onWeek, onDay, onSettings }: Props)
       }
     >
       <SignedInTestBar />
+      <TravelSwitch state={state} onKit={onSettings} />
       {isDeload(week) && (
         <p className="text-sm text-zinc-600">Deload week: only the B (steady) exercises are shown.</p>
       )}
@@ -67,7 +69,7 @@ export function Home({ state, week, current, onWeek, onDay, onSettings }: Props)
       <ul className="space-y-3">
         {days.map(({ day, name, kind }) => {
           const done = isDayDone(state, week, day);
-          const exercises = exercisesFor(day, week, state.program);
+          const exercises = dayExercises(state, day, week, dayKey(week, day, state.program));
           const cardioDay = kind === 'cardio';
           return (
             <li key={day}>
@@ -132,5 +134,35 @@ function SyncButton({ className, onClick }: { className: string; onClick: () => 
       <Cloud />
       <StatusDot phase={phase} className="absolute right-2.5 bottom-3" />
     </button>
+  );
+}
+
+// Travel Mode switch: when the usual gym isn't available, lifting days use the kit to hand.
+function TravelSwitch({ state, onKit }: { state: State; onKit: () => void }) {
+  const kit = KIT_OPTIONS.filter((k) => state.kit.includes(k.value)).map((k) => k.label);
+  return (
+    <section className={`rounded-xl border p-3 ${state.travel ? 'border-amber-300 bg-amber-50' : 'border-zinc-200 bg-white'}`}>
+      <label className="flex items-center justify-between gap-4 min-h-11">
+        <span>
+          <span className="block font-medium">Travel mode</span>
+          <span className="block text-sm text-zinc-600">{state.travel ? 'Workouts use the kit you have.' : "Gym closed? Train with what's to hand."}</span>
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          checked={state.travel}
+          onChange={(e) => setTravel(e.target.checked)}
+          className="h-7 w-12 shrink-0 appearance-none rounded-full bg-zinc-300 relative cursor-pointer transition-colors checked:bg-red-700 before:absolute before:top-0.5 before:left-0.5 before:h-6 before:w-6 before:rounded-full before:bg-white before:shadow before:transition-transform checked:before:translate-x-5"
+        />
+      </label>
+      {state.travel && (
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-amber-950">
+          <span>Kit: {kit.length ? `${kit.join(', ')} + bodyweight` : 'Bodyweight only'}</span>
+          <button type="button" onClick={onKit} className="min-h-11 font-medium underline underline-offset-2">
+            Change kit
+          </button>
+        </p>
+      )}
+    </section>
   );
 }
