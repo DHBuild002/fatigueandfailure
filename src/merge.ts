@@ -35,6 +35,7 @@ export function mergeStates(a: State, b: State): State {
     logs,
     daysDone,
     cardio: { ...older.cardio, ...newer.cardio },
+    travelPicks: { ...older.travelPicks, ...newer.travelPicks },
     updatedAt: new Date(Math.max(stamp(a.updatedAt), stamp(b.updatedAt), Date.now())).toISOString(),
   };
 }

@@ -17,6 +17,10 @@ interface EditProps {
   discardLabel: string;
 }
 
+// What the count means: reps by default, or seconds / rounds when the prescription says so.
+const countWord = (ex: Exercise) => (/log seconds/.test(ex.prescription) ? 'sec' : /log rounds/.test(ex.prescription) ? 'rounds' : 'reps');
+const countLabel = (ex: Exercise) => ({ sec: 'Seconds', rounds: 'Rounds', reps: 'Reps' })[countWord(ex)];
+
 // Inline editor for one set: weight (or band) + reps + ✓. No modals.
 export function SetEditor({ index, exercise, unit, initial, prev, repsRef, onSave, onDiscard, discardLabel }: EditProps) {
   const [weightKg, setWeightKg] = useState(initial.weightKg);
@@ -27,14 +31,14 @@ export function SetEditor({ index, exercise, unit, initial, prev, repsRef, onSav
   const repsInput = repsRef ?? ownRepsRef;
 
   const repsN = parseInt(reps, 10);
-  const hasLoad = exercise.load === 'band' ? band !== undefined : weightKg !== undefined;
+  const hasLoad = exercise.load === 'band' ? band !== undefined : exercise.load === 'bodyweight' || weightKg !== undefined;
   const valid = hasLoad && Number.isInteger(repsN) && repsN > 0;
   const displayWeight = weightKg === undefined ? undefined : toDisplay(weightKg, unit);
 
   const submit = () => {
     if (!valid) return;
     const at = initial.at ?? new Date().toISOString();
-    const base = exercise.load === 'band' ? { band } : { weightKg };
+    const base = exercise.load === 'band' ? { band } : exercise.load === 'bodyweight' ? {} : { weightKg };
     onSave({ ...base, reps: repsN, ...(effort ? { effort } : {}), at });
   };
 
@@ -50,7 +54,7 @@ export function SetEditor({ index, exercise, unit, initial, prev, repsRef, onSav
         <span className="text-xs uppercase tracking-wide text-zinc-600">Set {index + 1}</span>
         {prev && (
           <span className="text-xs text-zinc-500 tabular-nums">
-            Last week: {prev.band ?? `${formatNumber(toDisplay(prev.weightKg ?? 0, unit))} ${unit}`} × {prev.reps}
+            Last week: {prev.band ?? (prev.weightKg === undefined ? 'BW' : `${formatNumber(toDisplay(prev.weightKg, unit))} ${unit}`)} × {prev.reps}
             {prev.effort && ` · ${effortLabel(prev.effort)}`}
           </span>
         )}
@@ -73,7 +77,7 @@ export function SetEditor({ index, exercise, unit, initial, prev, repsRef, onSav
             </button>
           ))}
         </div>
-      ) : (
+      ) : exercise.load === 'bodyweight' ? null : (
         <Stepper
           label={`Weight (${unit})`}
           value={displayWeight}
@@ -94,13 +98,13 @@ export function SetEditor({ index, exercise, unit, initial, prev, repsRef, onSav
             inputMode="numeric"
             pattern="[0-9]*"
             enterKeyHint="done"
-            aria-label={exercise.perSide ? `Reps per ${exercise.perSide}` : 'Reps'}
-            placeholder="reps"
+            aria-label={exercise.perSide ? `Reps per ${exercise.perSide}` : countLabel(exercise)}
+            placeholder={countWord(exercise)}
             value={reps}
             onChange={(e) => setReps(e.target.value.replace(/\D/g, ''))}
             className="h-12 w-full min-w-0 rounded-xl bg-white border border-zinc-300 text-xl text-center placeholder:text-zinc-400 focus:outline-none focus:border-red-600"
           />
-          <span className="text-sm text-zinc-600 shrink-0">{exercise.perSide ? `reps/${exercise.perSide}` : 'reps'}</span>
+          <span className="text-sm text-zinc-600 shrink-0">{exercise.perSide ? `reps/${exercise.perSide}` : countWord(exercise)}</span>
         </label>
         <button type="button" onClick={onDiscard} aria-label={discardLabel} className="h-12 min-w-12 grid place-items-center rounded-xl bg-zinc-100 text-zinc-700 active:bg-zinc-300">
           <Close />
@@ -124,7 +128,7 @@ interface ViewProps {
 
 export function SetRow({ index, set, prev, unit, perSide, onEdit }: ViewProps) {
   const up = beats(set, prev, unit);
-  const load = set.band ? <span className="capitalize">{set.band}</span> : `${formatNumber(toDisplay(set.weightKg ?? 0, unit))} ${unit}`;
+  const load = set.band ? <span className="capitalize">{set.band}</span> : set.weightKg === undefined ? 'BW' : `${formatNumber(toDisplay(set.weightKg, unit))} ${unit}`;
   return (
     <button
       type="button"

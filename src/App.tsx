@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { DEFAULT_PROGRAM, isCardioDay, programOf, type Day, type ProgramId } from './routine';
+import { DEFAULT_PROGRAM, isCardioDay, type Day, type ProgramId } from './routine';
 import { currentWeek, setState, todayISO, useStore } from './store';
 import { Home } from './screens/Home';
 import { Session } from './screens/Session';
 import { Cardio } from './screens/Cardio';
 import { Settings } from './screens/Settings';
 import { Progress } from './screens/Progress';
+import { findExercise } from './travel';
 import { PrimaryButton, Screen } from './components/Screen';
 import { ProgramPicker } from './components/ProgramPicker';
 import { SignIn } from './screens/SignIn';
@@ -76,7 +77,7 @@ function MainApp() {
         />
       );
     case 'progress': {
-      const exercise = programOf(state.program).exercises.find((e) => e.id === view.exerciseId);
+      const exercise = findExercise(view.exerciseId, state.program, view.day);
       const back = () => setView({ name: 'session', day: view.day, scrollY: view.scrollY });
       return exercise ? <Progress state={state} exercise={exercise} onBack={back} /> : null;
     }

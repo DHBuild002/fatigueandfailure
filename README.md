@@ -16,6 +16,7 @@ A mobile-first, offline PWA for running the **Failure & Fatigue** routine: one f
   - **Gym volume:** Legs, Arms, Chest & shoulders, Back, Cardio. Machines and cables, 4 sets.
 
   An exercise shared between routines keeps one history. The current week (1–12) comes from the start date, and weeks 4, 8 and 12 are deloads (A exercises hidden).
+- **Travel mode.** When the gym isn't available: a switch on Home swaps each lifting day for two picks that fit the kit ticked in Settings (free weights, cable, treadmill, rower), always including a bodyweight move for that day's muscles. Picks are fixed for the week, with Shuffle until a set is logged.
 - **kg / lb.** Weights are stored in kg and converted for display, with steps of 2.5 kg or 5 lb.
 - **Cardio days.** One entry per cardio day, logged from its day card: type, minutes and optional distance (km or mi).
 - **Offline and installable.** A service worker precaches the app. Data lives in `localStorage` (under `overload:v1`, or `overload:v1:<user id>` when signed in), and Settings can export it as JSON and import it back.

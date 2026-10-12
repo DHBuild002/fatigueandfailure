@@ -1,4 +1,5 @@
 import { PROGRAMS, type ProgramId } from './routine';
+import { KIT_OPTIONS } from './travel';
 import { emptyState, migrateState, type State } from './store';
 
 export type ParsedBackup = { ok: true; state: State; sets: number } | { ok: false; error: string };
@@ -35,6 +36,9 @@ export function parseBackup(text: string): ParsedBackup {
   if (raw.cardio !== undefined && !(isObject(raw.cardio) && Object.values(raw.cardio).every(validCardio))) return notBackup;
   if (raw.unit !== undefined && raw.unit !== 'kg' && raw.unit !== 'lb') return notBackup;
   if (raw.program !== undefined && !(typeof raw.program === 'string' && raw.program in PROGRAMS)) return notBackup;
+  const kitValues: string[] = KIT_OPTIONS.map((k) => k.value);
+  if (raw.kit !== undefined && !(Array.isArray(raw.kit) && raw.kit.every((k) => kitValues.includes(k)))) return notBackup;
+  if (raw.travelPicks !== undefined && !(isObject(raw.travelPicks) && Object.values(raw.travelPicks).every((ids) => Array.isArray(ids) && ids.every((id) => typeof id === 'string')))) return notBackup;
 
   const base = emptyState();
   const state = migrateState({
@@ -49,6 +53,9 @@ export function parseBackup(text: string): ParsedBackup {
     cardio: (raw.cardio as State['cardio']) ?? {},
     restSeconds: raw.restSeconds === 30 || raw.restSeconds === 60 || raw.restSeconds === 90 ? raw.restSeconds : base.restSeconds,
     autoRest: typeof raw.autoRest === 'boolean' ? raw.autoRest : base.autoRest,
+    travel: typeof raw.travel === 'boolean' ? raw.travel : base.travel,
+    kit: (raw.kit as State['kit']) ?? base.kit,
+    travelPicks: (raw.travelPicks as State['travelPicks']) ?? {},
   });
   const sets = Object.values(state.logs).reduce((n, s) => n + s.length, 0);
   return { ok: true, state, sets };

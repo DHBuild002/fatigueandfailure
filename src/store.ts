@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { DEFAULT_PROGRAM, TOTAL_WEEKS, isCardioDay, isDeload, type Day, type Exercise, type ProgramId } from './routine';
+import type { Kit } from './travel';
 
 export type Unit = 'kg' | 'lb';
 export type Band = 'light' | 'medium' | 'heavy';
@@ -40,6 +41,9 @@ export interface State {
   autoRest: boolean; // start the rest timer automatically after each logged set
   updatedAt: string; // ISO time of the last local change ('' = never), used to sync with the cloud
   routineVersion: number; // day numbering in daysDone (see migrateState)
+  travel: boolean; // Travel Mode: swap lifting days for picks that fit the kit to hand
+  kit: Kit[]; // kit available in Travel Mode (bodyweight is always available)
+  travelPicks: Record<string, string[]>; // key: dayKey(week, day, program) → exercise ids, once kept
 }
 
 // 1: Glutes, Legs, Arms, Chest, Back. 2: Legs, Arms, Chest, Back, Cardio.
@@ -63,6 +67,9 @@ export const emptyState = (): State => ({
   autoRest: false,
   updatedAt: '',
   routineVersion: ROUTINE_VERSION,
+  travel: false,
+  kit: ['weights'],
+  travelPicks: {},
 });
 
 // Bring saved data up to the current format, one version at a time. Idempotent.
@@ -304,6 +311,8 @@ export function nextTarget(ex: Exercise, prev: Previous | null, week: number, un
     s.band ? s.band === best.band : toDisplay(s.weightKg ?? 0, unit) === toDisplay(best.weightKg ?? 0, unit);
   const qualifying = prev.sets.filter((s) => sameLoad(s) && s.reps >= reps);
   if (qualifying.length < sets) return { ...same, reps, progressed: false };
+  // No load to add to a bodyweight move, so progress with reps instead.
+  if (ex.load === 'bodyweight') return { reps: best.reps + 2, progressed: true };
 
   // Every set rated Easy earns a double step (when there's room for one, e.g. bands).
   const double = qualifying.every((s) => s.effort === 1) ? increase(ex, best, 2, unit) : undefined;
@@ -316,6 +325,7 @@ export function nextTarget(ex: Exercise, prev: Previous | null, week: number, un
 // The load `steps` increments above a set: 2.5 kg / 5 lb each, or the next band(s).
 // Undefined when there is no heavier band.
 function increase(ex: Exercise, set: SetLog, steps: number, unit: Unit): Pick<SetLog, 'weightKg' | 'band'> | undefined {
+  if (ex.load === 'bodyweight') return undefined;
   if (ex.load === 'band') {
     const next = BANDS[bandRank(set.band) + steps];
     return next ? { band: next } : undefined;
@@ -359,7 +369,7 @@ export function formatNumber(n: number): string {
 export function formatSets(sets: SetLog[], unit: Unit): string {
   return sets
     .map((s, i) => {
-      const load = s.band ?? `${formatNumber(toDisplay(s.weightKg ?? 0, unit))}${i === 0 ? ` ${unit}` : ''}`;
+      const load = s.band ?? (s.weightKg === undefined ? 'BW' : `${formatNumber(toDisplay(s.weightKg, unit))}${i === 0 ? ` ${unit}` : ''}`);
       const effort = effortLabel(s.effort);
       return `${load} × ${s.reps}${effort ? ` (${effort})` : ''}`;
     })
@@ -429,4 +439,17 @@ export function setAutoRest(autoRest: boolean) {
 
 export function setStartDate(startDate: string) {
   setState((s) => ({ ...s, startDate }));
+}
+
+export function setTravel(travel: boolean) {
+  setState((s) => ({ ...s, travel }));
+}
+
+export function setKit(kit: Kit[]) {
+  setState((s) => ({ ...s, kit }));
+}
+
+// Keep a day's travel picks for that week (after a shuffle, or once a set is logged).
+export function saveTravelPicks(key: string, ids: string[]) {
+  setState((s) => ({ ...s, travelPicks: { ...s.travelPicks, [key]: ids } }));
 }
