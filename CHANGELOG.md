@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.2
+
+- Deload weeks on Overload's Chest & shoulders day add a 15-minute finisher: core, stretching or yoga (your pick, logged in minutes), so the session lasts about as long as the other days. It only appears in weeks 4, 8 and 12.
+
 ## 2.1.1
 
 - Deload weeks on Overload's Arms day add two simple extras: a light Dumbbell kickback (3×12 per arm, for the triceps the day otherwise misses) and a Farmer's carry (3 × 30 m with heavy dumbbells, logged as lengths). They only appear in weeks 4, 8 and 12.

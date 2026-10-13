@@ -73,6 +73,7 @@ export const PROGRAMS: Record<ProgramId, Program> = {
 
       A('bench-press', 3, 'Barbell bench press'),
       B('db-overhead-press', 3, 'Seated dumbbell overhead press', 3, 12),
+      B('chest-finisher', 3, 'Core, stretching or yoga', 1, 15, { load: 'bodyweight', prescription: 'Pick one · 15 min · log minutes', deloadOnly: true }),
 
       A('bent-over-row', 4, 'Barbell bent-over row'),
       B('romanian-deadlift', 4, 'Barbell Romanian deadlift', 3, 12),

@@ -62,8 +62,8 @@ describe('deload', () => {
       expect(roles).toMatch(/^A+B+$/);
     }
   });
-  it('seeds 12 exercises with unique ids', () => {
-    expect(new Set(EXERCISES.map((e) => e.id)).size).toBe(14);
+  it('seeds 15 exercises with unique ids', () => {
+    expect(new Set(EXERCISES.map((e) => e.id)).size).toBe(15);
   });
 });
 
@@ -373,11 +373,28 @@ describe('deload Arms day extras', () => {
     expect(names(5)).toEqual(names(1));
   });
   it('leaves other days alone', () => {
-    for (const day of [1, 3, 4] as const) expect(exercisesFor(day, 4).every((e) => !e.deloadOnly)).toBe(true);
+    for (const day of [1, 4] as const) expect(exercisesFor(day, 4).every((e) => !e.deloadOnly)).toBe(true);
   });
   it("adds 2.5 kg to the farmer's carry once all 3 lengths are done", () => {
     const carry = EXERCISES.find((e) => e.id === 'farmers-carry')!;
     expect(nextTarget(carry, { week: 4, sets: [w(24, 3)] }, 5, 'kg')).toMatchObject({ weightKg: 26.5, reps: 3, progressed: true });
     expect(nextTarget(carry, { week: 4, sets: [w(24, 2)] }, 5, 'kg')).toMatchObject({ weightKg: 24, progressed: false });
+  });
+});
+
+describe('deload Chest day finisher', () => {
+  const names = (week: number) => exercisesFor(3, week).map((e) => e.name);
+  it('adds a 15-minute core, stretching or yoga block in deload weeks only', () => {
+    expect(names(4)).toEqual(['Seated dumbbell overhead press', 'Core, stretching or yoga']);
+    expect(names(12)).toEqual(names(4));
+    expect(names(1)).toEqual(['Barbell bench press', 'Seated dumbbell overhead press']);
+    expect(names(5)).toEqual(names(1));
+  });
+  it('keeps the target at 15 minutes however long last time was', () => {
+    const fin = EXERCISES.find((e) => e.id === 'chest-finisher')!;
+    expect(nextTarget(fin, { week: 4, sets: [w(0, 20)] }, 8, 'kg')).toMatchObject({ reps: 15, progressed: false });
+  });
+  it('is only in the Overload routine', () => {
+    for (const id of ['cardio', 'light', 'gym'] as const) expect(PROGRAMS[id].exercises.some((e) => e.id === 'chest-finisher')).toBe(false);
   });
 });
