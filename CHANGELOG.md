@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1
+
+- Deload weeks on Overload's Arms day add two simple extras: a light Dumbbell kickback (3×12 per arm, for the triceps the day otherwise misses) and a Farmer's carry (3 × 30 m with heavy dumbbells, logged as lengths). They only appear in weeks 4, 8 and 12.
+
 ## 2.1.0
 
 - Travel mode, for when your gym isn't available. Switch it on from Home and tick your kit in Settings (free weights, cable machine, treadmill, rower). Each lifting day keeps its focus and shows two picks: one using your kit (or a rower/treadmill finisher if that's all you have) and one bodyweight move for the same muscles, so there's always a workout. Picks stay the same for the week, Shuffle re-rolls them until you log a set, and the cardio day suggests a session for your kit.

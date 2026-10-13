@@ -13,6 +13,7 @@ export interface Exercise {
   perSide?: 'leg' | 'arm'; // reps are logged per leg / per arm
   // Prescribed sets × reps for steady (B) work. Failure (A) sets are open-ended.
   scheme?: { sets: number; reps: number };
+  deloadOnly?: boolean; // only shown in deload weeks (a lighter, different stimulus)
 }
 
 export const TOTAL_WEEKS = 12;
@@ -67,6 +68,8 @@ export const PROGRAMS: Record<ProgramId, Program> = {
       A('single-arm-hammer-curl', 2, 'Single-arm hammer curl', { perSide: 'arm' }),
       B('zottman-curl', 2, 'Zottman curl', 3, 12),
       B('wrist-flexor-curl', 2, 'Wrist flexor curl', 3, 15),
+      B('db-kickback', 2, 'Dumbbell kickback', 3, 12, { perSide: 'arm', prescription: '3×12 per arm, light', deloadOnly: true }),
+      B('farmers-carry', 2, "Farmer's carry", 1, 3, { prescription: '3 × 30 m walks, heavy dumbbells · log lengths', deloadOnly: true }),
 
       A('bench-press', 3, 'Barbell bench press'),
       B('db-overhead-press', 3, 'Seated dumbbell overhead press', 3, 12),
@@ -173,5 +176,6 @@ export const dayName = (day: Day, program?: ProgramId) => daysFor(program).find(
 export const isDeload = (week: number) => week % 4 === 0;
 
 export function exercisesFor(day: Day, week: number, program?: ProgramId): Exercise[] {
-  return programOf(program).exercises.filter((e) => e.day === day && (!isDeload(week) || e.role === 'B'));
+  // Normal weeks: everything but the deload-only extras. Deload weeks: B lifts, extras included.
+  return programOf(program).exercises.filter((e) => e.day === day && (isDeload(week) ? e.role === 'B' : !e.deloadOnly));
 }
