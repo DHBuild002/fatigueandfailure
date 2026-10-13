@@ -63,7 +63,7 @@ describe('deload', () => {
     }
   });
   it('seeds 12 exercises with unique ids', () => {
-    expect(new Set(EXERCISES.map((e) => e.id)).size).toBe(12);
+    expect(new Set(EXERCISES.map((e) => e.id)).size).toBe(14);
   });
 });
 
@@ -361,5 +361,23 @@ describe('parseBackup with routines', () => {
   });
   it('rejects an unknown routine', () => {
     expect(parseBackup(JSON.stringify({ startDate: '2026-09-01', logs: {}, program: 'yoga' })).ok).toBe(false);
+  });
+});
+
+describe('deload Arms day extras', () => {
+  const names = (week: number) => exercisesFor(2, week).map((e) => e.name);
+  it('adds a kickback and a farmer\'s carry in deload weeks only', () => {
+    expect(names(4)).toEqual(['Zottman curl', 'Wrist flexor curl', 'Dumbbell kickback', "Farmer's carry"]);
+    expect(names(8)).toEqual(names(4));
+    expect(names(1)).toEqual(['Barbell curl', 'Single-arm hammer curl', 'Zottman curl', 'Wrist flexor curl']);
+    expect(names(5)).toEqual(names(1));
+  });
+  it('leaves other days alone', () => {
+    for (const day of [1, 3, 4] as const) expect(exercisesFor(day, 4).every((e) => !e.deloadOnly)).toBe(true);
+  });
+  it("adds 2.5 kg to the farmer's carry once all 3 lengths are done", () => {
+    const carry = EXERCISES.find((e) => e.id === 'farmers-carry')!;
+    expect(nextTarget(carry, { week: 4, sets: [w(24, 3)] }, 5, 'kg')).toMatchObject({ weightKg: 26.5, reps: 3, progressed: true });
+    expect(nextTarget(carry, { week: 4, sets: [w(24, 2)] }, 5, 'kg')).toMatchObject({ weightKg: 24, progressed: false });
   });
 });
