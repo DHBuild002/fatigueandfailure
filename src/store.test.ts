@@ -62,8 +62,8 @@ describe('deload', () => {
       expect(roles).toMatch(/^A+B+$/);
     }
   });
-  it('seeds 15 exercises with unique ids', () => {
-    expect(new Set(EXERCISES.map((e) => e.id)).size).toBe(15);
+  it('seeds 16 exercises with unique ids', () => {
+    expect(new Set(EXERCISES.map((e) => e.id)).size).toBe(16);
   });
 });
 
@@ -373,7 +373,7 @@ describe('deload Arms day extras', () => {
     expect(names(5)).toEqual(names(1));
   });
   it('leaves other days alone', () => {
-    for (const day of [1, 4] as const) expect(exercisesFor(day, 4).every((e) => !e.deloadOnly)).toBe(true);
+    expect(exercisesFor(1, 4).every((e) => !e.deloadOnly)).toBe(true);
   });
   it("adds 2.5 kg to the farmer's carry once all 3 lengths are done", () => {
     const carry = EXERCISES.find((e) => e.id === 'farmers-carry')!;
@@ -398,3 +398,17 @@ describe('deload Chest day finisher', () => {
     for (const id of ['cardio', 'light', 'gym'] as const) expect(PROGRAMS[id].exercises.some((e) => e.id === 'chest-finisher')).toBe(false);
   });
 });
+
+describe('deload Back day finisher', () => {
+  const names = (week: number) => exercisesFor(4, week).map((e) => e.name);
+  it('adds the finisher to the one-lift Back day in deload weeks only', () => {
+    expect(names(4)).toEqual(['Barbell Romanian deadlift', 'Core, stretching or yoga']);
+    expect(names(1)).toEqual(['Barbell bent-over row', 'Barbell Romanian deadlift']);
+    expect(names(5)).toEqual(names(1));
+  });
+  it('logs separately from the Chest day finisher', () => {
+    const ids = [3, 4].map((d) => exercisesFor(d as 3 | 4, 4).find((e) => e.name === 'Core, stretching or yoga')!.id);
+    expect(new Set(ids).size).toBe(2);
+  });
+});
+

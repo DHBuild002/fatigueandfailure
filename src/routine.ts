@@ -77,6 +77,7 @@ export const PROGRAMS: Record<ProgramId, Program> = {
 
       A('bent-over-row', 4, 'Barbell bent-over row'),
       B('romanian-deadlift', 4, 'Barbell Romanian deadlift', 3, 12),
+      B('back-finisher', 4, 'Core, stretching or yoga', 1, 15, { load: 'bodyweight', prescription: 'Pick one · 15 min · log minutes', deloadOnly: true }),
     ],
   },
   cardio: {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.3
+
+- Overload's Back day also gets the 15-minute core, stretching or yoga finisher in deload weeks, as it had only one lift. (Legs already has two lifts, and the other routines' deload days have two or more.)
+
 ## 2.1.2
 
 - Deload weeks on Overload's Chest & shoulders day add a 15-minute finisher: core, stretching or yoga (your pick, logged in minutes), so the session lasts about as long as the other days. It only appears in weeks 4, 8 and 12.
