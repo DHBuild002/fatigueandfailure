@@ -19,8 +19,8 @@ interface EditProps {
 
 // What the count means: reps by default, or seconds / rounds when the prescription says so.
 const countWord = (ex: Exercise) =>
-  /log seconds/.test(ex.prescription) ? 'sec' : /log rounds/.test(ex.prescription) ? 'rounds' : /log lengths/.test(ex.prescription) ? 'lengths' : 'reps';
-const countLabel = (ex: Exercise) => ({ sec: 'Seconds', rounds: 'Rounds', lengths: 'Lengths', reps: 'Reps' })[countWord(ex)];
+  /log seconds/.test(ex.prescription) ? 'sec' : /log rounds/.test(ex.prescription) ? 'rounds' : /log lengths/.test(ex.prescription) ? 'lengths' : /log minutes/.test(ex.prescription) ? 'minutes' : 'reps';
+const countLabel = (ex: Exercise) => ({ sec: 'Seconds', rounds: 'Rounds', lengths: 'Lengths', minutes: 'Minutes', reps: 'Reps' })[countWord(ex)];
 
 // Inline editor for one set: weight (or band) + reps + ✓. No modals.
 export function SetEditor({ index, exercise, unit, initial, prev, repsRef, onSave, onDiscard, discardLabel }: EditProps) {
