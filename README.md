@@ -19,7 +19,7 @@ A mobile-first, offline PWA for running the **Failure & Fatigue** routine: one f
 - **Travel mode.** When the gym isn't available: a switch on Home swaps each lifting day for two picks that fit the kit ticked in Settings (free weights, cable, treadmill, rower), always including a bodyweight move for that day's muscles. Picks are fixed for the week, with Shuffle until a set is logged.
 - **kg / lb.** Weights are stored in kg and converted for display, with steps of 2.5 kg or 5 lb.
 - **Cardio days.** One entry per cardio day, logged from its day card: type, minutes and optional distance (km or mi).
-- **Offline and installable.** A service worker precaches the app. Data lives in `localStorage` (under `overload:v1`, or `overload:v1:<user id>` when signed in), and Settings can export it as JSON and import it back.
+- **Offline and installable.** A service worker precaches the app. Data lives in `localStorage` (under `overload:v1`, or `overload:v1:<user id>` when signed in), and Settings can export it as JSON and import it back. After each finished workout, Home offers a backup download and shows when the last one was taken.
 - **Accounts and sync (optional).** With Supabase configured: invite-only sign-in with an emailed code, and each person's data backed up and synced across their devices. It stays offline-first. Without Supabase keys the app runs local-only, exactly as before. Setup guide: [docs/accounts-setup.md](docs/accounts-setup.md).
 
 ## Getting started

@@ -7,6 +7,7 @@ import { useAccount } from '../account';
 import { SYNC_LABEL, useSyncStatus } from '../sync';
 import { StatusDot } from '../components/SyncBadge';
 import { TestModeBar } from '../components/TestModeBar';
+import { BackupPrompt } from '../components/BackupPrompt';
 
 interface Props {
   state: State;
@@ -15,9 +16,11 @@ interface Props {
   onWeek: (week: number) => void;
   onDay: (day: Day) => void;
   onSettings: () => void;
+  backupDue: boolean; // a workout was just finished: offer a backup
+  onBackupClose: () => void;
 }
 
-export function Home({ state, week, current, onWeek, onDay, onSettings }: Props) {
+export function Home({ state, week, current, onWeek, onDay, onSettings, backupDue, onBackupClose }: Props) {
   const days = daysFor(state.program);
   const cardioSummary = (day: Day) => {
     const cardio = cardioFor(state, week, day);
@@ -60,6 +63,7 @@ export function Home({ state, week, current, onWeek, onDay, onSettings }: Props)
         </div>
       }
     >
+      {backupDue && <BackupPrompt onClose={onBackupClose} />}
       <SignedInTestBar />
       <TravelSwitch state={state} onKit={onSettings} />
       {isDeload(week) && (

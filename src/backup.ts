@@ -1,6 +1,49 @@
 import { PROGRAMS, type ProgramId } from './routine';
 import { KIT_OPTIONS } from './travel';
-import { emptyState, migrateState, type State } from './store';
+import { emptyState, getState, migrateState, todayISO, type State } from './store';
+
+const LAST_BACKUP_KEY = 'overload:lastBackup';
+
+// When a backup was last downloaded from this device. Kept on the device only (not in the
+// synced data), and storage can be unavailable, so every access is guarded.
+export function lastBackupAt(): string | null {
+  try {
+    return localStorage.getItem(LAST_BACKUP_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function markBackedUp(now = new Date()) {
+  try {
+    localStorage.setItem(LAST_BACKUP_KEY, now.toISOString());
+  } catch {
+    // Not remembering the time is harmless: the prompt just says "never".
+  }
+}
+
+export function backupAgeText(iso: string | null, now = new Date()): string {
+  if (!iso) return 'never';
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return 'never';
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((startOfDay(now) - startOfDay(then)) / 86_400_000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  return `${days} days ago`;
+}
+
+// Save the current data as a JSON file (the same file Export JSON has always made).
+export function downloadBackup() {
+  const blob = new Blob([JSON.stringify(getState(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `overload-${todayISO()}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  markBackedUp();
+}
 
 export type ParsedBackup = { ok: true; state: State; sets: number } | { ok: false; error: string };
 
