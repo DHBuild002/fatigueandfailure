@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
-import { setKit, currentWeek, getState, resetState, setAutoRest, setProgram, setStartDate, setState, setUnit, todayISO, type State, type Unit } from '../store';
-import { parseBackup, type ParsedBackup } from '../backup';
+import { setKit, currentWeek, resetState, setAutoRest, setProgram, setStartDate, setState, setUnit, type State, type Unit } from '../store';
+import { backupAgeText, downloadBackup, lastBackupAt, parseBackup, type ParsedBackup } from '../backup';
 import { RestPicker } from '../components/RestTimer';
 import { PrimaryButton, Screen } from '../components/Screen';
 import { ProgramPicker } from '../components/ProgramPicker';
@@ -26,19 +26,10 @@ interface Props {
 
 const card = 'rounded-2xl bg-white border border-zinc-200 shadow-sm p-4 space-y-3';
 
-function exportJSON() {
-  const blob = new Blob([JSON.stringify(getState(), null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `overload-${todayISO()}.json`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 export function Settings({ state, onBack }: Props) {
   // Inline confirmation: no modals, and window.confirm() is blocked in some embedded browsers.
   const [confirmReset, setConfirmReset] = useState(false);
+  const [lastBackup, setLastBackup] = useState(lastBackupAt());
   const account = useAccount();
   const signedIn = account.status === 'signed-in';
   return (
@@ -142,7 +133,15 @@ export function Settings({ state, onBack }: Props) {
             ? 'Your data is saved on this phone and backed up to your account. Export a copy any time, or import one to restore it.'
             : 'Everything is stored on this device only. Export a copy to keep a backup, or import one to restore it (for example after reinstalling the app).'}
         </p>
-        <PrimaryButton onClick={exportJSON}>Export JSON</PrimaryButton>
+        <PrimaryButton
+          onClick={() => {
+            downloadBackup();
+            setLastBackup(lastBackupAt());
+          }}
+        >
+          Export JSON
+        </PrimaryButton>
+        <p className="text-sm text-zinc-600">Last backup: {backupAgeText(lastBackup)}</p>
         <ImportBackup />
         {confirmReset ? (
           <div className="space-y-3 rounded-xl border border-red-300 p-3">

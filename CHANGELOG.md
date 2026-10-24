@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.0
+
+- After you finish a workout (or save a new cardio entry), Home offers to back up your data: Download backup, or Not now. It shows when your last backup was. The same date appears under Export JSON in Settings. The time is remembered on the phone only, so nothing changes in your synced data or backup files.
+
 ## 2.1.3
 
 - Overload's Back day also gets the 15-minute core, stretching or yoga finisher in deload weeks, as it had only one lift. (Legs already has two lifts, and the other routines' deload days have two or more.)

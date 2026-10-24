@@ -9,12 +9,13 @@ interface Props {
   week: number;
   day: Day;
   onBack: () => void;
+  onFinished: () => void; // an entry was saved
 }
 
 const field = 'h-12 w-full min-w-0 rounded-xl bg-white border border-zinc-300 px-4 text-lg focus:outline-none focus:border-red-600';
 const numField = `${field} text-xl text-center`;
 
-export function Cardio({ state, week, day, onBack }: Props) {
+export function Cardio({ state, week, day, onBack, onFinished }: Props) {
   const existing = cardioFor(state, week, day);
   const du = distanceUnit(state.unit);
   const [type, setType] = useState(existing?.type ?? 'Run');
@@ -36,7 +37,8 @@ export function Cardio({ state, week, day, onBack }: Props) {
       distanceKm = unchanged ? existing!.distanceKm : distanceFromDisplay(distanceN, state.unit);
     }
     saveCardio(week, day, { type: type.trim(), minutes: minutesN, distanceKm });
-    onBack();
+    if (existing) onBack();
+    else onFinished();
   };
 
   return (

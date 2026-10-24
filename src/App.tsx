@@ -46,6 +46,7 @@ function MainApp() {
   useForegroundRefresh();
   const [view, setView] = useState<View>({ name: 'home' });
   const [week, setWeek] = useState(current);
+  const [backupDue, setBackupDue] = useState(false); // offer a backup on Home after a workout is saved
 
   // Follow the calendar when the start date changes (first launch, settings, reset).
   const [seenCurrent, setSeenCurrent] = useState(current);
@@ -62,17 +63,22 @@ function MainApp() {
   if (!state.startDate) return <FirstLaunch />;
 
   const home = () => setView({ name: 'home' });
+  const finished = () => {
+    setBackupDue(true);
+    home();
+  };
 
   switch (view.name) {
     case 'session':
       // Cardio days have no lifts; they use the cardio log.
-      if (isCardioDay(view.day, state.program)) return <Cardio state={state} week={week} day={view.day} onBack={home} />;
+      if (isCardioDay(view.day, state.program)) return <Cardio state={state} week={week} day={view.day} onBack={home} onFinished={finished} />;
       return (
         <Session
           state={state}
           week={week}
           day={view.day}
           onBack={home}
+          onFinished={finished}
           onProgress={(exerciseId) => setView({ name: 'progress', day: view.day, exerciseId, scrollY: window.scrollY })}
         />
       );
@@ -92,6 +98,8 @@ function MainApp() {
           onWeek={setWeek}
           onDay={(day) => setView({ name: 'session', day })}
           onSettings={() => setView({ name: 'settings' })}
+          backupDue={backupDue}
+          onBackupClose={() => setBackupDue(false)}
         />
       );
   }

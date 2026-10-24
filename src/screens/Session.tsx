@@ -11,10 +11,11 @@ interface Props {
   week: number;
   day: Day;
   onBack: () => void;
+  onFinished: () => void; // the day was just finished (not re-opened)
   onProgress: (exerciseId: string) => void;
 }
 
-export function Session({ state, week, day, onBack, onProgress }: Props) {
+export function Session({ state, week, day, onBack, onFinished, onProgress }: Props) {
   const done = isDayDone(state, week, day);
   const key = dayKey(week, day, state.program);
   const exercises = dayExercises(state, day, week, key);
@@ -54,7 +55,8 @@ export function Session({ state, week, day, onBack, onProgress }: Props) {
             <PrimaryButton
               onClick={() => {
                 setDayDone(week, day, true);
-                onBack();
+                if (done) onBack();
+                else onFinished();
               }}
             >
               {done ? 'Done · home' : 'Finish day'}
